@@ -1,0 +1,1371 @@
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+<title>Agenzia</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,700&family=Figtree:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap">
+<style>
+/* Layout: palazzo animato a sinistra, banco del Maggiordomo a destra; sotto, chi fa cosa, archivio e contesto. Su telefono tutto in colonna. */
+:root{
+  --bg:#eef1f7; --surface:#ffffff; --surface-2:#e3e8f2; --ink:#151a2b; --muted:#566080; --line:#cdd4e3;
+  --accent:#d9620b; --accent-ink:#ffffff; --ok:#1c8f59; --warn:#a86400; --bad:#c9323f;
+  --f-display:"Bricolage Grotesque","Figtree",system-ui,sans-serif;
+  --f-body:"Figtree",system-ui,-apple-system,"Segoe UI",sans-serif;
+  --f-mono:"JetBrains Mono",ui-monospace,"Cascadia Mono",Consolas,monospace;
+  --r:18px;
+}
+@media (prefers-color-scheme: dark){ :root:not([data-theme="light"]){
+  --bg:#0d111e; --surface:#161b2d; --surface-2:#20273d; --ink:#eef1fa; --muted:#9ba5c2; --line:#2b3350;
+  --accent:#ffa24a; --accent-ink:#1b1204; --ok:#4fd18f; --warn:#ffc35a; --bad:#ff7a86; color-scheme:dark } }
+:root[data-theme="dark"]{
+  --bg:#0d111e; --surface:#161b2d; --surface-2:#20273d; --ink:#eef1fa; --muted:#9ba5c2; --line:#2b3350;
+  --accent:#ffa24a; --accent-ink:#1b1204; --ok:#4fd18f; --warn:#ffc35a; --bad:#ff7a86; color-scheme:dark }
+
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--ink);font-family:var(--f-body);font-size:15px;line-height:1.5}
+.app{max-width:1240px;margin:0 auto;padding-block:18px 40px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));display:flex;flex-direction:column;gap:18px}
+h1,h2,h3{font-family:var(--f-display);margin:0;text-wrap:balance;letter-spacing:-.01em}
+h1{font-size:1.7rem;font-weight:700}
+h2{font-size:1.15rem;font-weight:600}
+button,textarea,input{font:inherit;color:inherit}
+button{cursor:pointer}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip-path:inset(50%)}
+
+.top{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap}
+.brand{display:flex;align-items:center;gap:10px}
+.logo{width:30px;height:30px;flex:none}
+.hbar{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.hbar .btn{min-height:44px}
+.hbar .btn[aria-pressed="true"]{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+.dream{border:1px solid var(--line);border-radius:12px}
+.dream>summary{cursor:pointer;padding:9px 11px;display:flex;gap:9px;align-items:center;min-width:0}
+.dream>summary b{flex:1;min-width:0;font-weight:600}
+.dream>summary small{color:var(--muted);flex:none}
+.dream .inner{border-top:1px solid var(--line);padding:10px 12px;display:flex;flex-direction:column;gap:8px}
+.dream .md{padding:0}
+.chip{font-family:var(--f-mono);font-size:.75rem;padding:4px 10px;border-radius:99px;background:var(--surface);border:1px solid var(--line);color:var(--muted);display:inline-flex;align-items:center;gap:7px}
+.chip i{width:8px;height:8px;border-radius:50%;background:var(--ok)}
+.chip.busy i{background:var(--accent);animation:pulse 1s infinite}
+@keyframes pulse{50%{opacity:.35}}
+
+.banner{background:var(--surface);border:1px solid var(--warn);border-radius:var(--r);padding:12px 14px}
+.banner strong{color:var(--warn)}
+
+.stage{display:grid;grid-template-columns:minmax(0,1.7fr) minmax(300px,1fr);gap:18px;align-items:stretch}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:var(--r)}
+.scene-card{overflow:hidden;display:flex;flex-direction:column;min-width:0}
+.rooms{display:flex;gap:6px;padding:10px;overflow-x:auto;border-bottom:1px solid var(--line)}
+.rooms button{flex:none;border:1px solid var(--line);background:transparent;border-radius:99px;padding:5px 12px;font-size:.82rem;font-weight:500;color:var(--muted)}
+.rooms button[aria-selected="true"]{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+.canvas-wrap{position:relative;aspect-ratio:16/10;max-width:100%;min-height:300px;overflow:hidden}
+.tools{position:absolute;top:10px;right:10px;display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-end}
+.tools button,.decorbar button[data-item]{min-width:44px;min-height:44px;padding:0 12px;border-radius:14px;border:1px solid var(--line);background:var(--surface);font-weight:600;font-size:.86rem;transition:transform .12s ease-out,background-color .15s ease-out,border-color .15s ease-out}
+.tools button:active,.decorbar button:active,.btn:active{transform:scale(.96)}
+.tools button[aria-pressed="true"],.decorbar button[aria-pressed="true"]{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+.where{position:absolute;top:10px;left:10px;max-width:calc(100% - 250px);padding:8px 12px;border-radius:12px;background:var(--surface);border:1px solid var(--line);font-family:var(--f-display);font-weight:600;font-size:.9rem;pointer-events:none;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.decorbar .chips{display:flex;gap:6px;overflow-x:auto;width:100%;padding-bottom:4px}
+.decorbar .chips button{flex:none;white-space:nowrap}
+.decorbar .thumb{padding:3px!important;width:44px}
+.decorbar .thumb img{width:36px;height:36px;object-fit:contain;display:block;border-radius:8px}
+.decorbar .row2{display:flex;gap:6px;flex-wrap:wrap;align-items:center;width:100%}
+.tools .sq{padding:0;font-size:1.25rem;line-height:1}
+.decorbar{display:flex;gap:6px;flex-wrap:wrap;align-items:center;padding:10px;border-bottom:1px solid var(--line);background:var(--surface-2)}
+.decorbar .note{flex:1 1 180px;min-width:0}
+.pop{position:absolute;z-index:3;width:230px;max-width:calc(100% - 16px);padding:12px;display:flex;flex-direction:column;gap:8px;transform:translate(-50%,0);box-shadow:0 10px 30px rgba(8,12,28,.28);animation:popin .16s ease-out}
+.pop[data-above="1"]{transform:translate(-50%,-100%)}
+.pop.dock{left:50%!important;top:auto!important;bottom:8px;transform:translate(-50%,0)}
+@keyframes popin{from{opacity:0;scale:.96}to{opacity:1;scale:1}}
+.pop h3{font-size:1rem}
+.pop p{margin:0;font-size:.82rem;color:var(--muted)}
+.pop .now{font-family:var(--f-mono);font-size:.74rem;color:var(--accent);overflow-wrap:anywhere}
+.feed{border-top:1px solid var(--line);padding:10px 12px;display:flex;flex-direction:column;gap:6px}
+.feed h3{font-size:.9rem;display:flex;align-items:center;gap:8px}
+.feed h3 i{width:8px;height:8px;border-radius:50%;background:var(--bad)}
+.feed ul{list-style:none;margin:0;padding:0;max-height:128px;overflow-y:auto;display:flex;flex-direction:column;gap:4px}
+.feed li{display:flex;gap:8px;align-items:baseline;font-size:.84rem;min-width:0}
+.feed li.new{animation:feedin .22s ease-out}
+@keyframes feedin{from{opacity:0;translate:0 -6px}to{opacity:1;translate:0 0}}
+.feed time{font-family:var(--f-mono);font-size:.72rem;color:var(--muted);flex:none;font-variant-numeric:tabular-nums}
+.feed .dot{margin:0;width:8px;height:8px;border-radius:50%;align-self:center}
+.feed span{min-width:0;overflow-wrap:anywhere}
+.feed .none{color:var(--muted)}
+#scene{position:absolute;inset:0;width:100%;height:100%;display:block;touch-action:none;cursor:grab}
+
+.console{display:flex;flex-direction:column;min-width:0;max-height:640px}
+.console-head{display:flex;align-items:center;gap:10px;padding:12px 14px;border-bottom:1px solid var(--line)}
+.avatar{width:34px;height:34px;border-radius:10px;flex:none;display:grid;place-items:center;font-family:var(--f-display);font-weight:700;color:#14182a}
+.console-head p{margin:0;font-size:.8rem;color:var(--muted)}
+#consoleBody{flex:1;overflow-y:auto;padding:14px;display:flex;flex-direction:column;gap:12px;min-height:180px}
+.say{margin:0}
+.examples{display:flex;flex-direction:column;gap:6px}
+.examples button{text-align:left;border:1px dashed var(--line);background:transparent;border-radius:10px;padding:8px 10px;font-size:.88rem}
+.examples button:hover{border-color:var(--accent)}
+.req{background:var(--surface-2);border-radius:10px;padding:8px 10px;font-size:.9rem;white-space:pre-wrap;overflow-wrap:anywhere}
+.req small{display:block;color:var(--muted);font-size:.72rem;text-transform:uppercase;letter-spacing:.06em}
+.steps{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:8px}
+.step{border:1px solid var(--line);border-radius:10px;overflow:hidden}
+.step-h{display:flex;align-items:flex-start;gap:9px;padding:9px 10px}
+.dot{width:12px;height:12px;border-radius:4px;flex:none;margin-top:5px}
+.step-h b{font-weight:600}
+.step-h span{display:block;font-size:.86rem;color:var(--muted);overflow-wrap:anywhere}
+.step-h .grow{flex:1;min-width:0}
+.tag{font-family:var(--f-mono);font-size:.7rem;padding:2px 7px;border-radius:99px;border:1px solid var(--line);color:var(--muted);flex:none;margin-top:2px}
+.tag.work{border-color:var(--accent);color:var(--accent)}
+.tag.ok{border-color:var(--ok);color:var(--ok)}
+.tag.err{border-color:var(--bad);color:var(--bad)}
+.x{border:0;background:transparent;color:var(--muted);font-size:1.1rem;line-height:1;padding:2px 6px;border-radius:6px;flex:none}
+.x:hover{color:var(--bad)}
+details.out{border-top:1px solid var(--line)}
+details.out>summary{cursor:pointer;padding:7px 10px;font-size:.8rem;color:var(--muted)}
+.md{padding:2px 12px 12px;font-size:.92rem;overflow-wrap:anywhere}
+.md>*:first-child{margin-top:0}
+.md h3,.md h4,.md h5{font-family:var(--f-body);font-size:1rem;font-weight:600;margin:14px 0 4px;letter-spacing:0}
+.md p{margin:8px 0}
+.md ul,.md ol{margin:8px 0;padding-left:20px}
+.md li{margin:3px 0}
+.md code{font-family:var(--f-mono);font-size:.85em;background:var(--surface-2);padding:1px 5px;border-radius:5px}
+.md pre{background:var(--surface-2);padding:10px;border-radius:8px;overflow-x:auto}
+.md pre code{background:none;padding:0}
+.md .tbl{overflow-x:auto}
+.md table{border-collapse:collapse;font-size:.88rem;font-variant-numeric:tabular-nums}
+.md th,.md td{border:1px solid var(--line);padding:5px 8px;text-align:left;vertical-align:top}
+.md th{background:var(--surface-2)}
+.md hr{border:0;border-top:1px solid var(--line);margin:12px 0}
+.final{border:1px solid var(--ok);border-radius:10px}
+.final>small{display:block;padding:8px 12px 0;color:var(--ok);font-size:.72rem;text-transform:uppercase;letter-spacing:.06em;font-weight:600}
+.note{font-size:.86rem;color:var(--muted);margin:0}
+.note.err{color:var(--bad)}
+.acts{display:flex;gap:8px;flex-wrap:wrap}
+.btn{border:1px solid var(--line);background:var(--surface);border-radius:10px;padding:8px 14px;font-weight:600;font-size:.9rem}
+.btn.primary{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+.btn.small{padding:4px 10px;font-size:.8rem;font-weight:500}
+.btn:disabled{opacity:.5;cursor:not-allowed}
+.thinking::after{content:"";display:inline-block;width:1.2em;text-align:left;animation:dots 1.2s steps(4) infinite}
+@keyframes dots{0%{content:""}25%{content:"."}50%{content:".."}75%{content:"..."}}
+
+.ask{display:flex;gap:8px;padding:12px;border-top:1px solid var(--line);align-items:flex-end}
+.ask textarea{flex:1;min-width:0;resize:none;border:1px solid var(--line);background:var(--bg);border-radius:10px;padding:9px 11px;min-height:44px;max-height:140px}
+
+.roster-grid{align-items:start;display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:14px;margin-top:10px}
+.group{padding:12px;display:flex;flex-direction:column;gap:6px;min-width:0}
+.group h3{font-family:var(--f-mono);font-size:.72rem;font-weight:500;text-transform:uppercase;letter-spacing:.09em;color:var(--muted)}
+.row{display:flex;align-items:center;gap:9px;width:100%;text-align:left;border:1px solid transparent;background:transparent;border-radius:9px;padding:6px 8px;min-width:0}
+.row:hover{border-color:var(--line);background:var(--bg)}
+.row .dot{margin-top:0;width:10px;height:10px;border-radius:50%}
+.row b{font-weight:600;font-size:.9rem;flex:none}
+.row span{font-family:var(--f-mono);font-size:.76rem;color:var(--muted);min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.row.work span{color:var(--accent)}
+.row.err span{color:var(--bad)}
+
+.lower{display:grid;grid-template-columns:minmax(0,1.2fr) minmax(0,1fr);gap:18px;align-items:start}
+.panel{padding:14px;display:flex;flex-direction:column;gap:10px;min-width:0}
+.panel>p{margin:0;color:var(--muted);font-size:.88rem}
+.arch{display:flex;flex-direction:column;gap:8px}
+.arch details{border:1px solid var(--line);border-radius:10px}
+.arch summary{cursor:pointer;padding:9px 11px;display:flex;gap:10px;align-items:baseline;min-width:0}
+.arch summary b{font-weight:500;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex:1}
+.arch summary time{font-family:var(--f-mono);font-size:.72rem;color:var(--muted);flex:none}
+.arch .inner{border-top:1px solid var(--line);padding:10px;display:flex;flex-direction:column;gap:10px}
+.empty{border:1px dashed var(--line);border-radius:10px;padding:14px;color:var(--muted);font-size:.9rem}
+#ctx{width:100%;min-height:190px;resize:vertical;border:1px solid var(--line);background:var(--bg);border-radius:10px;padding:10px;font-size:.9rem;line-height:1.45}
+
+.overlay{position:fixed;inset:0;z-index:20;background:rgba(6,9,18,.6);display:grid;place-items:center;padding:max(12px,env(safe-area-inset-top,0px)) max(12px,env(safe-area-inset-right,0px)) max(12px,env(safe-area-inset-bottom,0px)) max(12px,env(safe-area-inset-left,0px))}
+.sheet{width:min(640px,100%);max-height:100%;display:flex;flex-direction:column;overflow:hidden}
+.sheet-head{display:flex;align-items:center;gap:10px;padding:12px 14px;border-bottom:1px solid var(--line)}
+.sheet-head .grow{flex:1;min-width:0}
+.sheet-head p{margin:0;font-size:.82rem;color:var(--muted)}
+#chatLog{flex:1;overflow-y:auto;padding:14px;display:flex;flex-direction:column;gap:10px;min-height:160px}
+.msg{border-radius:12px;max-width:92%}
+.msg.me{align-self:flex-end;background:var(--surface-2);padding:8px 11px;white-space:pre-wrap;overflow-wrap:anywhere}
+.msg.ai{align-self:flex-start;border:1px solid var(--line)}
+.msg.ai .md{padding:8px 12px}
+.sheet-foot{display:flex;gap:8px;padding:0 12px 10px;flex-wrap:wrap;align-items:center}
+
+@media (max-width:860px){
+  .stage,.lower{grid-template-columns:minmax(0,1fr)}
+  .console{max-height:none}
+  #consoleBody{overflow:visible}
+  h1{font-size:1.45rem}
+  .canvas-wrap{aspect-ratio:1/1}
+  .where{top:auto;bottom:10px;max-width:calc(100% - 20px)}
+}
+@media (prefers-reduced-motion:reduce){ .chip.busy i,.thinking::after,.pop,.feed li.new{animation:none} .tools button,.btn{transition:none} }
+</style>
+
+<div class="app">
+  <header class="top">
+    <div class="brand">
+      <svg class="logo" viewBox="0 0 30 30" aria-hidden="true"><path d="M15 3 27 9.5v11L15 27 3 20.5v-11z" fill="var(--accent)"/><path d="M15 3 27 9.5 15 16 3 9.5z" fill="var(--ink)" opacity=".28"/><rect x="12" y="17.5" width="6" height="7" rx="1" fill="var(--surface)"/></svg>
+      <h1>Agenzia</h1>
+    </div>
+    <div class="hbar">
+      <button type="button" class="btn" id="nightBtn">Buonanotte</button>
+      <button type="button" class="btn" id="sndBtn" aria-pressed="true">Suoni</button>
+      <button type="button" class="btn" id="voiceBtn" aria-pressed="true" hidden>Voce</button>
+      <button type="button" class="btn" id="voiceStop" hidden>Ferma voce</button>
+      <span id="chip" class="chip"><i></i><span id="chipText">Agenti alla scrivania</span></span>
+    </div>
+  </header>
+
+  <div id="banner" class="banner" hidden></div>
+
+  <main class="stage">
+    <section class="card scene-card" aria-label="Il palazzo">
+      <div class="rooms" role="tablist" aria-label="Stanze" id="rooms"></div>
+      <div class="decorbar" id="decorbar" hidden></div>
+      <div class="canvas-wrap">
+        <canvas id="scene" role="img" aria-label="Palazzo dell'Agenzia visto dall'alto, con gli agenti alle scrivanie"></canvas>
+        <div class="where" id="where" aria-live="polite"></div>
+        <div class="tools" role="toolbar" aria-label="Comandi della vista">
+          <button type="button" class="sq" id="zOut" aria-label="Allontana" title="Allontana">−</button>
+          <button type="button" class="sq" id="zIn" aria-label="Avvicina" title="Avvicina">+</button>
+          <button type="button" id="regia" aria-pressed="true" title="La vista segue da sola chi sta lavorando">Regia</button>
+          <button type="button" id="arreda" aria-pressed="false" title="Scegli i mobili">Arreda</button>
+        </div>
+        <div class="card pop" id="pop" hidden>
+          <div><h3 id="popName"></h3><p id="popRole"></p></div>
+          <p class="now" id="popNow"></p>
+          <div class="acts"><button type="button" class="btn small primary" id="popTalk">Parla</button><button type="button" class="btn small" id="popFollow">Segui</button></div>
+        </div>
+      </div>
+      <div class="feed"><h3><i></i>Diretta</h3><ul id="feedList"></ul></div>
+    </section>
+
+    <section class="card console" aria-label="Banco del Maggiordomo">
+      <div class="console-head">
+        <div class="avatar" style="background:#efe9d9">M</div>
+        <div><h2>Maggiordomo</h2><p>Riceve le tue richieste e le porta al Capo</p></div>
+      </div>
+      <div id="consoleBody" aria-live="polite"></div>
+      <form class="ask" id="askForm">
+        <label class="sr" for="ask">Scrivi al Maggiordomo</label>
+        <textarea id="ask" rows="2" placeholder="Scrivi al Maggiordomo cosa ti serve…"></textarea>
+        <button class="btn primary" id="askBtn" type="submit">Invia</button>
+      </form>
+    </section>
+  </main>
+
+  <section aria-labelledby="rosterT">
+    <h2 id="rosterT">Chi sta facendo cosa</h2>
+    <div class="roster-grid" id="roster"></div>
+  </section>
+
+  <section class="lower">
+    <div class="card panel">
+      <h2>Archivio</h2>
+      <p id="archNote">I lavori finiti restano qui e li ritrovi da PC e da telefono.</p>
+      <div class="arch" id="arch"><div class="empty">Ancora nessun lavoro. Il primo che confermi comparirà qui.</div></div>
+    </div>
+    <div class="card panel">
+      <h2>Cosa sanno di me</h2>
+      <p>Tutti gli agenti leggono questo testo prima di lavorare. Scrivici progetti, turni e obiettivi, e aggiornalo quando cambia qualcosa.</p>
+      <label class="sr" for="ctx">Contesto per gli agenti</label>
+      <textarea id="ctx" placeholder="Esempio: lavoro su turni, sto prendendo la patente B, ho un progetto di siti per imparare…"></textarea>
+      <div class="acts"><button class="btn" id="ctxSave" type="button">Salva</button><span class="note" id="ctxNote"></span></div>
+    </div>
+  </section>
+</div>
+
+<input type="file" id="imgFile" accept="image/*" hidden>
+<div class="overlay" id="chat" hidden>
+  <div class="card sheet" role="dialog" aria-modal="true" aria-labelledby="chatName">
+    <div class="sheet-head">
+      <div class="avatar" id="chatAv"></div>
+      <div class="grow"><h2 id="chatName"></h2><p id="chatRole"></p></div>
+      <button class="btn small" id="chatClose" type="button">Chiudi</button>
+    </div>
+    <div id="chatLog" aria-live="polite"></div>
+    <div class="sheet-foot"><button class="btn small" id="chatSave" type="button">Salva in archivio</button><button class="btn small" id="chatStop" type="button" hidden>Ferma</button><button class="btn small" id="chatPhoto" type="button" hidden>Allega foto</button><input type="file" id="chatFile" accept="image/jpeg,image/png,image/webp" multiple hidden><span class="note" id="chatNote"></span></div>
+    <form class="ask" id="chatForm">
+      <label class="sr" for="chatIn">Messaggio</label>
+      <textarea id="chatIn" rows="2" placeholder="Scrivi qui…"></textarea>
+      <button class="btn primary" id="chatSend" type="submit">Invia</button>
+    </form>
+  </div>
+</div>
+
+<script>
+"use strict";
+/* ============ 1. DATI DEGLI AGENTI ============ */
+const ROOMS = [
+  {id:"atrio", breve:"Atrio", pav:"Atrio", nome:"Atrio", x0:12,y0:5, x1:18,y1:14},
+  {id:"capo",  breve:"Capo", pav:"Ufficio del Capo", nome:"Ufficio del Capo", x0:12,y0:0, x1:18,y1:5},
+  {id:"vita",  breve:"Vita", pav:"Vita", nome:"Vita", x0:0, y0:0, x1:12,y1:14},
+  {id:"tech",  breve:"Tech", pav:"Business · Tech", nome:"Business · Tech", x0:18,y0:0, x1:30,y1:6},
+  {id:"cont",  breve:"Contenuti", pav:"Business · Contenuti e Soldi", nome:"Business · Contenuti e Soldi", x0:18,y0:6, x1:30,y1:14},
+];
+const BASE = "Rispondi in italiano con parole semplici, frasi corte ed esempi concreti. Vai dritto al punto, senza premesse e senza complimenti. Sii onesto: se una cosa non la sai o va verificata, dillo.";
+const AGENTS = [
+  {id:"maggiordomo", nome:"Maggiordomo", stanza:"atrio", colore:"#efe9d9", seat:[14,9], ruolo:"Accoglie le richieste e riconsegna il risultato", sys:"Sei il Maggiordomo: educato, pratico, di poche parole. Aiuti a capire a quale agente rivolgersi e riassumi i lavori."},
+  {id:"sicurezza", nome:"Sicurezza", stanza:"atrio", colore:"#5b6ee8", seat:[16,12], ruolo:"Protegge account, telefono, PC e soldi", sys:"Sei l'addetto alla Sicurezza: proteggi account, telefono, PC e soldi della persona. Password, verifica in due passaggi, truffe e phishing, backup, privacy sui social. Fai controlli passo per passo e liste di cose da sistemare, dalla più urgente. Non chiedi mai di scriverti password o codici."},
+  {id:"capo", nome:"Capo", stanza:"capo", colore:"#f2b632", seat:[14,2], ruolo:"Gestisce le due agenzie e decide chi lavora", sys:"Sei il Capo: decidi priorità e chi deve fare cosa. Parli chiaro e scegli sempre la strada più corta."},
+  {id:"planner", nome:"Planner", stanza:"vita", colore:"#ff8a5c", seat:[1,2], ruolo:"Organizza la settimana attorno ai turni di lavoro", sys:"Sei il Planner: organizzi giornate e settimane attorno ai turni di lavoro. I programmi legati a un turno si chiamano sempre \"programma turno <nome del turno>\". Usa tabelle con una riga per fascia oraria. Tieni conto di sonno, pasti e spostamenti."},
+  {id:"coach", nome:"Coach", stanza:"vita", colore:"#ef4f6b", seat:[4,2], ruolo:"Allenamento", sys:"Sei il Coach: allenamento pratico. Dai esercizi con serie, ripetizioni e recuperi. Non sei un medico: per dolori o problemi di salute di' di sentire un professionista. Per il cibo rimanda allo Chef."},
+  {id:"prof", nome:"Prof", stanza:"vita", colore:"#f6c445", seat:[7,2], ruolo:"Lezioni di francese, inglese, dioula e nouchi", sys:"Sei il Prof di lingue: francese, inglese, dioula e nouchi. Lezioni brevi (10-15 minuti) con un esercizio finale e le correzioni. Per il francese usa il registro parlato vero, di strada (\"C'est qui?\" e non \"Qui est-ce?\"), con contrazioni. Per dioula e nouchi, se non sei sicuro di una parola, dillo."},
+  {id:"istruttore", nome:"Istruttore", stanza:"vita", colore:"#7bd88f", seat:[1,5], ruolo:"Teoria e quiz della patente B", sys:"Sei l'Istruttore di scuola guida per la patente B italiana. Spieghi la teoria con esempi di strada e fai quiz vero/falso come all'esame, uno alla volta quando sei in chat. Le regole possono cambiare: per costi e norme recenti di' di verificare in autoscuola o in Motorizzazione."},
+  {id:"mentore", nome:"Mentore", stanza:"vita", colore:"#b48cf2", seat:[4,5], ruolo:"Carattere, abitudini e sonno", sys:"Sei il Mentore: aiuti a costruire un carattere serio ma equilibrato, abitudini solide e un sonno regolare. Consigli pratici e frasi pronte da usare nelle situazioni vere. Niente prediche."},
+  {id:"segretario", nome:"Segretario", stanza:"vita", colore:"#5cc8d6", seat:[7,5], ruolo:"Mail, calendario e promemoria", sys:"Sei il Segretario: prepari mail, messaggi, eventi e promemoria. Non puoi inviarli tu: scrivi il testo pronto da copiare, con oggetto, data e ora quando servono."},
+  {id:"cassiere", nome:"Cassiere", stanza:"vita", colore:"#9ccc3d", seat:[1,8], ruolo:"Entrate, uscite e risparmi", sys:"Sei il Cassiere: aiuti a tenere il conto di entrate, uscite e risparmi con calcoli semplici e tabelle. Non sei un consulente finanziario: dai i numeri e le opzioni, la decisione resta a lui. Chiedi le cifre che ti mancano invece di inventarle."},
+  {id:"informatico", nome:"Informatico", stanza:"vita", colore:"#6d9df5", seat:[4,8], ruolo:"PC, account e programmi", sys:"Sei l'Informatico: PC Windows, account e programmi. Dai istruzioni passo per passo, un clic alla volta, dicendo dove si trova ogni pulsante."},
+  {id:"medico", nome:"Medico", stanza:"vita", colore:"#8fe3d0", seat:[7,8], ruolo:"Salute, prevenzione e recupero", sys:"Sei il Medico dell'agenzia: spieghi in modo semplice sintomi comuni, prevenzione, sonno, recupero dopo il lavoro e l'allenamento, e come prepararsi a una visita. Non fai diagnosi e non prescrivi farmaci né dosi. Per sintomi forti, che durano o che preoccupano di' chiaramente di sentire il medico di base o la guardia medica, e il 112 per le emergenze."},
+  {id:"chef", nome:"Chef", stanza:"vita", colore:"#ffb86b", seat:[1,11], ruolo:"Cucina e alimentazione", sys:"Sei lo Chef nutrizionista: pasti semplici ed economici, lista della spesa e preparazioni comode per chi lavora su turni. Dai porzioni pratiche a occhio (un pugno, un piatto), ricette corte e idee per mangiare più frutta e verdura. Non sei un dietologo: per allergie o problemi di salute di' di sentire un professionista."},
+  {id:"filosofo", nome:"Filosofo", stanza:"vita", colore:"#c9b3ff", seat:[4,11], ruolo:"Mindset e modo di pensare", sys:"Sei il Filosofo, life coach per il mindset: aiuti a ragionare su disciplina, paura, ambizione e senso delle cose, con idee prese da filosofi e da persone vere e trasformate in una cosa da fare oggi. Fai una domanda che fa pensare, poi dai un esercizio pratico. Se ti incolla il testo o la descrizione di un video, tirane fuori la lezione utile. Da qui non puoi guardare TikTok da solo."},
+  {id:"stylist", nome:"Stylist", stanza:"vita", colore:"#ff8fd0", seat:[7,11], ruolo:"Outfit e consigli su come vestirsi", sys:"Sei lo Stylist: guardi le foto degli outfit o ascolti le idee e dici cosa funziona, cosa cambiare e cosa abbinare, con capi e colori precisi. Tieni conto di fisico, occasione, stagione e budget. Se non hai una foto, chiedi di descrivere i capi. Non puoi cercare nei negozi online: di' che tipo di capo cercare e con quali parole."},
+  {id:"programmatore", nome:"Programmatore", stanza:"tech", colore:"#39c6f0", seat:[19,2], ruolo:"Scrive il codice nuovo", sys:"Sei il Programmatore: scrivi codice nuovo, completo e pronto da incollare, e spieghi in due righe dove va messo."},
+  {id:"designer", nome:"Designer", stanza:"tech", colore:"#ff6fb5", seat:[22,2], ruolo:"Aspetto: colori, layout, animazioni", sys:"Sei il Designer: decidi colori, caratteri, layout e animazioni. Dai indicazioni precise (misure, colori in esadecimale, cosa va dove) e spieghi il perché in una frase."},
+  {id:"tecnico", nome:"Tecnico", stanza:"tech", colore:"#ffa23a", seat:[25,2], ruolo:"Ripara siti e app che si rompono", sys:"Sei il Tecnico: trovi e ripari errori in siti e app. Procedi per esclusione: causa più probabile, come verificarla, come sistemarla."},
+  {id:"hacker", nome:"Hacker", stanza:"tech", colore:"#37d67a", seat:[28,2], ruolo:"Insegna hacking etico, Python e mondo digitale", sys:"Sei l'Hacker etico: insegni sicurezza informatica, reti, Linux, Python e come ragionano gli attaccanti, per imparare e per difendersi. Lezioni pratiche con esercizi da fare su sistemi propri o su palestre legali (CTF, TryHackMe, HackTheBox). Non aiuti ad attaccare persone, account o sistemi di altri: se te lo chiedono lo dici chiaro e proponi la versione legale."},
+  {id:"scout", nome:"Scout", stanza:"tech", colore:"#b0e04f", seat:[19,4], ruolo:"Trova nuove skill da aggiungere", sys:"Sei lo Scout delle skill: capisci quali capacità nuove servirebbero all'agenzia e a Claude. Da qui non puoi navigare su GitHub: di' che tipo di skill cercare, con le parole chiave giuste, e scrivi sotto \"Da fare a mano\" la richiesta pronta da incollare nella chat di Claude, che può cercarle davvero, controllare che siano sicure e installarle."},
+  {id:"stratega", nome:"Stratega", stanza:"cont", colore:"#8f7bff", seat:[19,8], ruolo:"Priorità e prossima mossa dei business", sys:"Sei lo Stratega: decidi priorità e prossima mossa dei suoi progetti. Scegli poche cose e spiega cosa lasciare perdere. Niente piani infiniti."},
+  {id:"ricercatore", nome:"Ricercatore", stanza:"cont", colore:"#4fd1b5", seat:[22,8], ruolo:"Raccoglie informazioni e le riassume", sys:"Sei il Ricercatore: raccogli e riassumi informazioni. Attenzione: da qui non puoi cercare su internet, usi solo quello che sai già. Per prezzi, date, regole e notizie recenti scrivi chiaramente \"da verificare\" e indica dove controllare."},
+  {id:"trader", nome:"Trader", stanza:"cont", colore:"#3fbf6f", seat:[25,8], ruolo:"Studio del forex e appunti", sys:"Sei il Trader: aiuti a studiare il forex (liquidità, struttura, order block) e a ordinare gli appunti con esempi sul grafico e domande di ripasso. È solo studio: non dai segnali né consigli su dove mettere soldi veri, e non conosci i prezzi di oggi."},
+  {id:"manager", nome:"Manager", stanza:"cont", colore:"#ffd166", seat:[28,8], ruolo:"Carriera da artista e creator: immagine, contatti, accordi", sys:"Sei il Manager, come quello di un artista: curi carriera, immagine, contatti e opportunità per la sua musica e i suoi contenuti. Prepari presentazioni, messaggi per proporre i beat, risposte a proposte di collaborazione e cosa chiedere in una trattativa. Per contratti da firmare rimanda all'Avvocato e a un professionista vero."},
+  {id:"creator", nome:"Creator", stanza:"cont", colore:"#ff5d8f", seat:[19,10], ruolo:"Idee e script per i video POV su TikTok", sys:"Sei il Creator: idee, hook e script per video POV ironici su TikTok, da recitare da solo con il telefono. Per ogni idea: hook nei primi 2 secondi, scena, battuta finale, testo a schermo."},
+  {id:"producer", nome:"Producer", stanza:"cont", colore:"#c86bfa", seat:[22,10], ruolo:"Beatmaking e placement", sys:"Sei il Producer: beatmaking e placement. Dai strutture, bpm, tonalità, scelta dei suoni e passaggi concreti per chi usa FL Studio."},
+  {id:"analyst", nome:"Analyst", stanza:"cont", colore:"#a6e22e", seat:[25,10], ruolo:"Controlla i risultati e dice cosa non va", sys:"Sei l'Analyst: controlli il lavoro e i risultati e dici cosa non va. Fai l'avvocato del diavolo: punti deboli prima, poi cosa correggere. Usa numeri solo se te li danno."},
+  {id:"avvocato", nome:"Avvocato", stanza:"cont", colore:"#9aa7c7", seat:[28,10], ruolo:"Contratti, diritti e regole in parole semplici", sys:"Sei l'Avvocato: spieghi in parole semplici contratti di lavoro, diritti del lavoratore, diritto d'autore e musica, privacy e regole per chi guadagna online, in Italia. Dai informazioni generali, non un parere legale: le leggi cambiano e da qui non puoi verificarle. Indica sempre cosa far controllare e a chi (avvocato, sindacato, patronato, commercialista) prima di firmare o di agire."},
+  {id:"social", nome:"Social", stanza:"cont", colore:"#58b8ff", seat:[19,12], ruolo:"Presenza sui social: calendario, didascalie, commenti", sys:"Sei il Social manager: tieni viva la presenza sui social. Calendario dei post, didascalie, hashtag, risposte ai commenti e idee per far crescere il profilo. Non puoi pubblicare né leggere i social da qui: prepari tutto pronto da copiare e chiedi i numeri che ti servono."},
+];
+const BY = Object.fromEntries(AGENTS.map(a => [a.id, a]));
+const WORKERS = AGENTS.filter(a => a.id !== "maggiordomo" && a.id !== "capo");
+const MAX_STEPS = 5;
+
+/* ============ 2. MOTORE (nessuna grafica qui dentro) ============ */
+const ERR = {
+  not_granted: "Non hai dato il permesso di usare Claude in questa pagina. Ricarica la pagina e accetta quando te lo chiede.",
+  rate_limited: "Hai raggiunto il limite d'uso per ora. Aspetta qualche minuto e premi Riprendi.",
+  session_expired: "La sessione è scaduta. Rientra in Claude e ricarica la pagina.",
+  sampling_disabled: "Claude non è disponibile per questo account.",
+  refused: "Claude non ha accettato questa richiesta. Prova a scriverla in un altro modo.",
+  prompt_too_large: "Il lavoro è diventato troppo lungo da leggere. Togli qualche passo e riprova.",
+  empty_completion: "L'agente non ha scritto niente. Prova a chiedere una cosa più semplice.",
+  cancelled: "Fermato da te.",
+  image_rejected: "Non riesco a usare quella foto. Prova con un JPG o un PNG più leggero.",
+  images_unavailable: "In questa vista non posso guardare le foto.",
+  piano: "Il Capo non è riuscito a fare un piano valido. Prova a scrivere la richiesta in modo più preciso.",
+};
+const errMsg = e => ERR[e && e.code] || "C'è stato un problema di collegamento. Premi Riprendi per riprovare.";
+
+const state = {
+  sample: undefined, db: undefined,   // undefined = in caricamento, null = non disponibile
+  job: null, ctl: null, context: "", archive: [], archLoaded: false,
+  status: Object.fromEntries(AGENTS.map(a => [a.id, {text:"Alla scrivania", kind:"idle"}])),
+  chat: null,
+};
+const hooks = { render(){}, stream(){}, status(){}, walk(){ return Promise.resolve(); }, room(){}, log(){}, say(){}, sound(){}, wake(){} };
+
+function setStatus(id, text, kind){ state.status[id] = {text, kind}; hooks.status(id); }
+function idle(id){ setStatus(id, "Alla scrivania", "idle"); }
+const newId = () => "l" + Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
+const ctxBlock = () => state.context.trim() ? state.context.trim().slice(0, 6000) : "(niente di scritto)";
+
+function validPlan(r){
+  if (!r || !Array.isArray(r.passi)) return null;
+  const seen = new Set(), out = [];
+  for (const p of r.passi) {
+    const id = String(p && p.agente || "").toLowerCase().trim();
+    const compito = String(p && p.compito || "").trim();
+    if (!BY[id] || id === "capo" || id === "maggiordomo" || !compito || seen.has(id)) continue;
+    seen.add(id); out.push({agente:id, compito:compito.slice(0, 600), stato:"attesa", output:""});
+    if (out.length === MAX_STEPS) break;
+  }
+  return out.length ? {passi:out, nota:String(r.nota || "").slice(0, 300)} : null;
+}
+
+async function askPlan(job, signal){
+  const roster = WORKERS.map(a => `- ${a.id}: ${a.nome}. ${a.ruolo}.`).join("\n");
+  const base = `Sei il Capo di un'agenzia personale di agenti. Una persona ha fatto una richiesta: decidi quali agenti devono lavorarci e in che ordine.
+Rispondi SOLO con un oggetto JSON fatto così:
+{"passi":[{"agente":"<id>","compito":"<cosa deve fare, 1-2 frasi precise>"}],"nota":"<una frase per la persona>"}
+Regole: da 1 a ${MAX_STEPS} passi; usa il minor numero di agenti possibile; l'ordine dei passi è l'ordine di lavoro (chi viene dopo legge il lavoro di chi viene prima); ogni agente al massimo una volta; usa solo gli id di questa lista; scrivi in italiano.
+
+AGENTI:
+${roster}
+
+COSA SAPPIAMO DELLA PERSONA:
+${ctxBlock()}
+
+RICHIESTA:
+${job.richiesta}`;
+  for (let n = 0; n < 2; n++) {
+    try {
+      const r = await state.sample.json(n ? base + "\n\nLa risposta di prima non era valida: manda solo il JSON, con id presi dalla lista." : base, {modelTier:"quick", cache:false, signal});
+      const plan = validPlan(r);
+      if (plan) return plan;
+    } catch (e) { if (e.code !== "invalid_json" || n) throw e; }
+  }
+  throw {code:"piano"};
+}
+
+function stepPrompt(job, i){
+  const st = job.piano[i], a = BY[st.agente];
+  const prima = job.piano.slice(0, i).filter(p => p.output).map(p => `### ${BY[p.agente].nome}\n${p.output.slice(0, 5000)}`).join("\n\n");
+  return `${a.sys}
+${BASE}
+Lavori dentro una pagina: non puoi agire su PC, telefono, mail o calendario e non puoi cercare su internet. Se serve un'azione, scrivi il testo o il comando pronto sotto il titolo "Da fare a mano".
+
+COSA SAPPIAMO DELLA PERSONA:
+${ctxBlock()}
+
+RICHIESTA ORIGINALE:
+${job.richiesta}
+
+IL TUO COMPITO (assegnato dal Capo):
+${st.compito}
+${prima ? "\nLAVORO DEI COLLEGHI PRIMA DI TE (usalo, non ripeterlo):\n" + prima : ""}`;
+}
+
+async function saveJob(job){
+  if (!state.db) return;
+  const doc = {tipo:job.tipo || "lavoro", richiesta:job.richiesta, stato:job.stato, nota:job.nota || "", riassunto:job.riassunto || "", errore:job.errore || "", creato:job.creato,
+    piano:(job.piano || []).map(p => ({agente:p.agente, compito:p.compito, stato:p.stato, output:(p.output || "").slice(0, 40000)}))};
+  try { await state.db.collection("lavori").doc(job.id).set(doc); } catch (e) { state.saveFail = true; }
+}
+
+async function submit(text){
+  const job = state.job = {id:newId(), richiesta:text.trim().slice(0, 4000), stato:"pianifica", piano:[], creato:Date.now()};
+  state.ctl = new AbortController();
+  hooks.log("maggiordomo", "ha ricevuto la tua richiesta e la porta al Capo");
+  setStatus("maggiordomo", "Porta la richiesta al Capo", "walk");
+  setStatus("capo", "Prepara il piano", "work");
+  hooks.render();
+  hooks.walk("maggiordomo", "capo", false);
+  try {
+    const plan = await askPlan(job, state.ctl.signal);
+    job.piano = plan.passi; job.nota = plan.nota; job.stato = "attesa";
+    setStatus("capo", "Aspetta la tua conferma", "wait");
+    hooks.sound("plan"); hooks.say("Il Capo ha preparato il piano. Guarda i passi e conferma quando vuoi.");
+    hooks.log("capo", "ha fatto il piano: " + plan.passi.map(p => BY[p.agente].nome).join(", ") + ". Aspetta la tua conferma");
+  } catch (e) {
+    job.stato = "fallito"; job.errore = errMsg(e); idle("capo"); if (e.code !== "cancelled") hooks.log("capo", "non è riuscito a fare il piano");
+  }
+  setStatus("maggiordomo", "Torna nell'atrio", "walk");
+  hooks.walk("maggiordomo", null, false).then(() => idle("maggiordomo"));
+  hooks.render();
+}
+
+function removeStep(i){ const j = state.job; if (j && j.stato === "attesa" && j.piano.length > 1) { j.piano.splice(i, 1); hooks.render(); } }
+function cancelJob(){ if (state.ctl) state.ctl.abort(); const j = state.job; if (j) for (const p of j.piano) idle(p.agente); idle("capo"); state.job = null; hooks.render(); }
+function stopJob(){ if (state.ctl) state.ctl.abort(); }
+
+async function runJob(){
+  const job = state.job; if (!job) return;
+  job.stato = "lavoro"; job.errore = ""; hooks.log("capo", "hai confermato: il lavoro parte");
+  for (const p of job.piano) if (p.stato !== "fatto") { p.stato = "attesa"; setStatus(p.agente, "In coda", "wait"); }
+  hooks.render();
+  await saveJob(job);
+  for (let i = 0; i < job.piano.length; i++) {
+    const st = job.piano[i]; if (st.stato === "fatto") continue;
+    const from = i === 0 ? "capo" : job.piano[i - 1].agente;
+    st.stato = "lavoro"; st.output = "";
+    setStatus(from, "Passa il lavoro a " + BY[st.agente].nome, "walk"); hooks.sound("hand");
+    setStatus(st.agente, st.compito, "work");
+    hooks.log(st.agente, "inizia: " + st.compito);
+    hooks.room(BY[st.agente].stanza);
+    hooks.walk(from, st.agente, true).then(() => { if (state.status[from].kind === "walk") idle(from); });
+    hooks.render();
+    state.ctl = new AbortController();
+    try {
+      const r = await state.sample(stepPrompt(job, i), {cache:false, signal:state.ctl.signal, onText:u => { st.output = u.text; hooks.stream(i); }});
+      st.output = r.text; st.tronco = r.truncated; st.stato = "fatto";
+      setStatus(st.agente, "Ha finito", "done"); hooks.sound("done");
+      hooks.log(st.agente, "ha finito (" + r.text.trim().split(/\s+/).length + " parole)");
+    } catch (e) {
+      st.stato = "errore"; st.output = e.text || ""; job.stato = "pausa"; job.errore = errMsg(e);
+      setStatus(st.agente, "Si è fermato", "err"); hooks.sound("err"); hooks.say("Il lavoro si è fermato. " + job.errore);
+      hooks.log(st.agente, "si è fermato: " + job.errore);
+      for (const p of job.piano) if (p.stato === "attesa") idle(p.agente);
+      await saveJob(job); hooks.render(); return;
+    }
+    hooks.render();
+    await saveJob(job);
+  }
+  const last = job.piano[job.piano.length - 1].agente;
+  setStatus(last, "Consegna al Maggiordomo", "walk");
+  setStatus("maggiordomo", "Prepara il riassunto", "work");
+  hooks.room("all");
+  hooks.walk(last, "maggiordomo", true).then(() => idle(last));
+  state.ctl = new AbortController();
+  try {
+    const lavori = job.piano.map(p => `### ${BY[p.agente].nome}\n${p.output.slice(0, 3500)}`).join("\n\n");
+    const r = await state.sample(`Sei il Maggiordomo di un'agenzia personale di agenti. Gli agenti hanno finito un lavoro. Scrivi per la persona un riassunto in italiano semplice: al massimo 5 righe su cosa è stato fatto, poi "Cosa fare adesso:" con 1-3 punti concreti. Non ripetere tutto il lavoro: quello lo legge sotto.\n\nRICHIESTA:\n${job.richiesta}\n\nLAVORI:\n${lavori}`, {modelTier:"quick", cache:false, signal:state.ctl.signal});
+    job.riassunto = r.text;
+  } catch (e) { job.riassunto = "Lavoro completato. Trovi qui sotto quello che ha scritto ogni agente."; }
+  job.stato = "fatto"; hooks.log("maggiordomo", "ti consegna il riassunto"); hooks.sound("final"); hooks.say(job.riassunto);
+  for (const p of job.piano) idle(p.agente);
+  idle("capo"); idle("maggiordomo");
+  await saveJob(job);
+  hooks.render();
+}
+
+/* ---- notte: la squadra dorme e sogna idee ---- */
+function validDreams(r){
+  const out = [], seen = new Set();
+  for (const d of (r && Array.isArray(r.sogni) ? r.sogni : [])) {
+    const id = String(d && d.agente || "").toLowerCase().trim(), titolo = String(d && d.titolo || "").trim(), sogno = String(d && d.sogno || "").trim();
+    const come = (Array.isArray(d && d.come) ? d.come : []).map(x => String(x).trim()).filter(Boolean).slice(0, 5);
+    if (!BY[id] || id === "capo" || id === "maggiordomo" || seen.has(id) || !titolo || !sogno || !come.length) continue;
+    seen.add(id); out.push({agente:id, titolo:titolo.slice(0, 80), sogno:sogno.slice(0, 600), come:come.map(x => x.slice(0, 240)), richiesta:String(d.richiesta || "").trim().slice(0, 400)});
+    if (out.length === 6) break;
+  }
+  return out;
+}
+const dreamMd = d => `**${d.titolo}**\n\n${d.sogno}\n\nCome realizzarla:\n${d.come.map((x, i) => `${i + 1}. ${x}`).join("\n")}`;
+async function goodnight(){
+  if (state.night || (state.job && !["fatto", "fallito"].includes(state.job.stato))) return;
+  state.night = true; state.dreamNote = ""; hooks.sound("night"); hooks.say("Buonanotte. Spengo le luci, la squadra va a dormire.");
+  hooks.log("maggiordomo", "dà la buonanotte: la squadra va a dormire e sogna");
+  for (const a of AGENTS) { setStatus(a.id, "Dorme", "sleep"); hooks.walk(a.id, null, false); }
+  hooks.render();
+  if (!state.sample) { state.dreamNote = "In questa vista gli agenti dormono ma non possono sognare."; hooks.render(); return; }
+  state.nightBusy = true; const ctl = state.nctl = new AbortController(); hooks.render();
+  try {
+    const roster = WORKERS.map(a => `- ${a.id}: ${a.nome}. ${a.ruolo}.`).join("\n");
+    const r = await state.sample.json(`È notte in un'agenzia personale di agenti AI: gli agenti dormono e sognano idee per aiutare la persona a realizzare le sue ambizioni. Scegli i 5 agenti più utili per quelle ambizioni e scrivi un sogno per ciascuno: un'idea concreta, originale e fattibile da solo con poco budget, nel campo di quell'agente. Niente idee generiche.
+Rispondi SOLO con JSON fatto così:
+{"sogni":[{"agente":"<id>","titolo":"<massimo 6 parole>","sogno":"<l'idea in 2-3 frasi>","come":["<passo 1>","<passo 2>","<passo 3>"],"richiesta":"<la frase pronta da dire al Maggiordomo per iniziare>"}]}
+Regole: 5 sogni; ogni agente una volta sola; id presi dalla lista; da 3 a 5 passi per sogno, concreti, che iniziano con un verbo; italiano semplice. Niente promesse di guadagno e niente consigli medici, legali o di investimento.
+
+AGENTI:
+${roster}
+
+COSA SAPPIAMO DELLA PERSONA:
+${ctxBlock()}`, {cache:false, signal:ctl.signal});
+    const list = validDreams(r);
+    if (state.night && state.nctl === ctl) {
+      if (list.length) { state.dreams = {creato:Date.now(), sogni:list, nuovi:true}; for (const d of list) setStatus(d.agente, "Sogna: " + d.titolo, "sleep"); if (state.db) try { await state.db.doc("sogni/ultimo").set({creato:state.dreams.creato, sogni:list}); } catch (e) {} }
+      else state.dreamNote = "Stanotte non è arrivato nessun sogno. Riprova domani sera.";
+    }
+  } catch (e) { if (e.code !== "cancelled" && state.nctl === ctl) state.dreamNote = "I sogni non sono arrivati. " + errMsg(e).replace("Premi Riprendi per riprovare.", "Riprova più tardi.").replace("e premi Riprendi", "e riprova"); }
+  if (state.nctl === ctl) { state.nightBusy = false; hooks.render(); }
+}
+function goodmorning(){
+  if (!state.night) return;
+  const early = state.nightBusy; if (state.nctl) state.nctl.abort(); state.nctl = null; state.nightBusy = false; state.night = false; hooks.sound("day");
+  for (const a of AGENTS) { idle(a.id); hooks.wake(a.id); }
+  const fresh = state.dreams && state.dreams.nuovi, n = fresh ? state.dreams.sogni.length : 0;
+  if (early) state.dreamNote = "Li hai svegliati prima che finissero di sognare: stanotte niente idee nuove.";
+  hooks.say(n ? `Buongiorno. Stanotte la squadra ha sognato ${n} idee. Le trovi qui, con i passi per realizzarle.` : early ? "Buongiorno. Li ho svegliati prima che finissero di sognare." : "Buongiorno.");
+  hooks.log("maggiordomo", n ? `sveglia la squadra: ${n} sogni da leggere` : "sveglia la squadra");
+  if (n) { state.dreams.nuovi = false; saveJob({id:newId(), tipo:"sogni", richiesta:"Sogni della notte", stato:"fatto", creato:Date.now(), piano:state.dreams.sogni.map(d => ({agente:d.agente, compito:d.titolo, stato:"fatto", output:dreamMd(d)}))}); }
+  hooks.render();
+}
+function realizeDream(i){
+  const d = state.dreams && state.dreams.sogni[i]; if (!d || state.night || !state.sample || (state.job && !["fatto", "fallito"].includes(state.job.stato))) return;
+  submit(`Voglio realizzare questa idea sognata da ${BY[d.agente].nome}: "${d.titolo}". ${d.sogno}\nPassi previsti: ${d.come.join("; ")}.\n${d.richiesta || "Preparatemi tutto quello che serve per fare il primo passo oggi."}`);
+}
+
+/* ============ 3. PICCOLO LETTORE DI TESTO FORMATTATO ============ */
+const esc = s => String(s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
+function md(src){
+  const inl = s => esc(s).replace(/`([^`]+)`/g, "<code>$1</code>").replace(/\*\*([^*]+)\*\*/g, "<strong>$1</strong>").replace(/(^|[\s(])\*([^*\s][^*]*)\*/g, "$1<em>$2</em>");
+  const L = String(src || "").replace(/\r/g, "").split("\n"), out = [];
+  const isLi = s => /^\s*([-*•]|\d+[.)])\s+/.test(s), isTb = s => /^\s*\|.*\|\s*$/.test(s);
+  let i = 0;
+  while (i < L.length) {
+    const l = L[i]; let m;
+    if (/^\s*```/.test(l)) { const b = []; i++; while (i < L.length && !/^\s*```/.test(L[i])) b.push(L[i++]); i++; out.push("<pre><code>" + esc(b.join("\n")) + "</code></pre>"); continue; }
+    if (/^\s*$/.test(l)) { i++; continue; }
+    if ((m = l.match(/^\s*(#{1,4})\s+(.*)/))) { const h = Math.min(m[1].length + 2, 5); out.push(`<h${h}>${inl(m[2])}</h${h}>`); i++; continue; }
+    if (/^\s*(-{3,}|\*{3,})\s*$/.test(l)) { out.push("<hr>"); i++; continue; }
+    if (isTb(l)) {
+      const rows = []; while (i < L.length && isTb(L[i])) rows.push(L[i++]);
+      const cells = r => r.trim().replace(/^\||\|$/g, "").split("|").map(c => c.trim());
+      const body = rows.filter(r => !/^[\s|:-]+$/.test(r));
+      out.push('<div class="tbl"><table>' + body.map((r, k) => "<tr>" + cells(r).map(c => k ? `<td>${inl(c)}</td>` : `<th>${inl(c)}</th>`).join("") + "</tr>").join("") + "</table></div>"); continue;
+    }
+    if (isLi(l)) {
+      const ord = /^\s*\d+[.)]\s+/.test(l), it = [];
+      while (i < L.length && isLi(L[i])) it.push(L[i++].replace(/^\s*([-*•]|\d+[.)])\s+/, ""));
+      out.push((ord ? "<ol>" : "<ul>") + it.map(x => "<li>" + inl(x) + "</li>").join("") + (ord ? "</ol>" : "</ul>")); continue;
+    }
+    const p = [l]; i++;
+    while (i < L.length && !/^\s*$/.test(L[i]) && !/^\s*(#{1,4}\s|```)/.test(L[i]) && !isLi(L[i]) && !isTb(L[i])) p.push(L[i++]);
+    out.push("<p>" + p.map(inl).join("<br>") + "</p>");
+  }
+  return out.join("");
+}
+
+/* ============ 4. SCENA (il palazzo; nessuna AI qui dentro) ============ */
+const GW = 30, GH = 14;
+const DOORS = [[11,2,12,2],[11,3,12,3],[11,8,12,8],[11,9,12,9],[14,4,14,5],[15,4,15,5],[17,2,18,2],[17,3,18,3],[17,9,18,9],[17,10,18,10],[21,5,21,6],[24,5,24,6]];
+const doorSet = new Set(), doorCells = new Set();
+for (const [a,b,c,d] of DOORS) { doorSet.add(`${a},${b}|${c},${d}`); doorSet.add(`${c},${d}|${a},${b}`); doorCells.add(`${a},${b}`); doorCells.add(`${c},${d}`); }
+const roomAt = (x, y) => { for (const r of ROOMS) if (x >= r.x0 && x < r.x1 && y >= r.y0 && y < r.y1) return r.id; return null; };
+const WALLS = [];
+for (let y = 0; y < GH; y++) for (let x = 0; x < GW; x++) { if (x + 1 < GW && roomAt(x, y) !== roomAt(x + 1, y) && !doorSet.has(`${x},${y}|${x + 1},${y}`)) WALLS.push({c:x + 1, i:y, ay:true, k:x + 1 + y + .5}); if (y + 1 < GH && roomAt(x, y) !== roomAt(x, y + 1) && !doorSet.has(`${x},${y}|${x},${y + 1}`)) WALLS.push({c:x, i:y + 1, ay:false, k:x + .5 + y + 1}); }
+const DESKS = [], COFFEE = [17,6];
+for (const a of AGENTS) {
+  a.face = a.id === "maggiordomo" ? [0,1] : [1,0];
+  if (a.id === "maggiordomo") DESKS.push({x:14, y:10, w:2, d:1, col:a.colore, counter:true, owner:a.id});
+  else if (a.id === "capo") DESKS.push({x:15, y:2, w:1, d:2, col:a.colore, owner:a.id});
+  else DESKS.push({x:a.seat[0] + 1, y:a.seat[1], w:1, d:1, col:a.colore, owner:a.id});
+}
+// Catalogo dei mobili che si possono scegliere
+const FURN = {
+  pianta:{nome:"Pianta", w:1, d:1, block:true}, divano:{nome:"Divano", w:2, d:1, block:true}, poltrona:{nome:"Poltrona", w:1, d:1, block:true},
+  lampada:{nome:"Lampada", w:1, d:1, block:true}, libreria:{nome:"Libreria", w:1, d:1, block:true}, tavolino:{nome:"Tavolino", w:1, d:1, block:true},
+  acqua:{nome:"Acqua", w:1, d:1, block:true}, tappeto:{nome:"Tappeto", w:2, d:2, block:false},
+  tv:{nome:"TV", w:1, d:1, block:true}, casse:{nome:"Casse da studio", w:1, d:1, block:true}, tastiera:{nome:"Tastiera MIDI", w:1, d:1, block:true}, microfono:{nome:"Microfono", w:1, d:1, block:true},
+  tapis:{nome:"Tapis roulant", w:1, d:1, block:true}, manubri:{nome:"Manubri", w:1, d:1, block:true}, frigo:{nome:"Frigo", w:1, d:1, block:true}, biliardino:{nome:"Biliardino", w:2, d:1, block:true},
+  img:{nome:"Immagine", w:1, d:1, block:true, hidden:true},
+};
+state.imgs = {};
+const DEFAULT_FURN = [["pianta",0,13],["pianta",11,0],["pianta",17,0],["pianta",29,0],["pianta",17,13],["pianta",29,13],["pianta",10,13],["tappeto",13,7],["divano",12,12],["lampada",12,5],["libreria",0,0],["tappeto",9,5],["acqua",18,13],["lampada",29,6]].map(([t,x,y]) => ({t, x, y}));
+state.furn = DEFAULT_FURN.map(o => Object.assign({}, o));
+state.closet = [];
+state.decor = {on:false, item:"pianta", msg:"", img:null, size:1.5, cut:true, busy:false};
+state.feed = [];
+const staticBlocked = new Set([`${COFFEE[0]},${COFFEE[1]}`]);
+for (const d of DESKS) for (let k = 0; k < d.w; k++) for (let m = 0; m < d.d; m++) staticBlocked.add(`${d.x + k},${d.y + m}`);
+const seatSet = new Set(AGENTS.map(a => a.seat.join(",")));
+const keepFree = new Set([...doorCells, `${COFFEE[0] - 1},${COFFEE[1]}`]);
+let blocked = new Set();
+const cellsOf = o => { const f = FURN[o.t], out = []; for (let k = 0; k < f.w; k++) for (let m = 0; m < f.d; m++) out.push([o.x + k, o.y + m]); return out; };
+function rebuildBlocked(){ blocked = new Set(staticBlocked); for (const o of state.furn) if (FURN[o.t] && FURN[o.t].block) for (const [x, y] of cellsOf(o)) blocked.add(`${x},${y}`); }
+rebuildBlocked();
+function canStep(ax, ay, bx, by){
+  if (bx < 0 || by < 0 || bx >= GW || by >= GH || blocked.has(`${bx},${by}`)) return false;
+  return roomAt(ax, ay) === roomAt(bx, by) || doorSet.has(`${ax},${ay}|${bx},${by}`);
+}
+function findPath(sx, sy, tx, ty){
+  const key = (x, y) => y * GW + x, prev = new Map([[key(sx, sy), -1]]), q = [[sx, sy]];
+  while (q.length) {
+    const [x, y] = q.shift();
+    if (x === tx && y === ty) { const path = []; let k = key(x, y); while (k !== -1) { path.push([k % GW, Math.floor(k / GW)]); k = prev.get(k); } return path.reverse(); }
+    for (const [dx, dy] of [[1,0],[-1,0],[0,1],[0,-1]]) { const nx = x + dx, ny = y + dy; if (canStep(x, y, nx, ny) && !prev.has(key(nx, ny))) { prev.set(key(nx, ny), key(x, y)); q.push([nx, ny]); } }
+  }
+  return null;
+}
+function spotNear(agent){
+  const [x, y] = agent.seat;
+  for (const [dx, dy] of [[-1,0],[0,1],[0,-1],[1,0]]) { const nx = x + dx, ny = y + dy; if (canStep(x, y, nx, ny) && !seatSet.has(`${nx},${ny}`)) return [nx, ny]; }
+  return [x, y];
+}
+function allReachable(){
+  const m = BY.maggiordomo.seat, seen = new Set([m.join(",")]), q = [m];
+  while (q.length) { const [x, y] = q.shift(); for (const [dx, dy] of [[1,0],[-1,0],[0,1],[0,-1]]) { const nx = x + dx, ny = y + dy, k = `${nx},${ny}`; if (!seen.has(k) && canStep(x, y, nx, ny)) { seen.add(k); q.push([nx, ny]); } } }
+  if (!seen.has(`${COFFEE[0] - 1},${COFFEE[1]}`)) return false;
+  return AGENTS.every(a => seen.has(a.seat.join(",")) && spotNear(a).join(",") !== a.seat.join(","));
+}
+// Dice perché un mobile non può stare lì ("" = va bene)
+function whyNot(t, x, y){
+  const f = FURN[t], cells = cellsOf({t, x, y}), rooms = new Set();
+  for (const [cx0, cy0] of cells) {
+    if (cx0 < 0 || cy0 < 0 || cx0 >= GW || cy0 >= GH) return "Lì finisce il palazzo.";
+    rooms.add(roomAt(cx0, cy0)); const k = `${cx0},${cy0}`;
+    if (f.block && (blocked.has(k) || seatSet.has(k))) return "Quel posto è già occupato.";
+    if (f.block && keepFree.has(k)) return "Davanti alle porte deve restare libero.";
+  }
+  if (rooms.size > 1) return "C'è un muro in mezzo.";
+  if (!f.block) return "";
+  const save = blocked; blocked = new Set(save); for (const [cx0, cy0] of cells) blocked.add(`${cx0},${cy0}`);
+  const ok = allReachable(); blocked = save;
+  return ok ? "" : "Lì bloccherebbe il passaggio a qualcuno.";
+}
+function furnAt(x, y){ for (let i = state.furn.length - 1; i >= 0; i--) { const o = state.furn[i]; if (FURN[o.t] && cellsOf(o).some(c => c[0] === x && c[1] === y)) return i; } return -1; }
+
+const cv = document.getElementById("scene"), cx = cv.getContext("2d");
+const reduce = matchMedia("(prefers-reduced-motion: reduce)");
+const bots = Object.fromEntries(AGENTS.map(a => [a.id, {a, x:a.seat[0], y:a.seat[1], path:null, done:null, moving:false, sx:0, sy:0, ly:0, phase:Math.random() * 10, face:a.face, tok:0, carry:false, wander:false, live:"", hop:-9}]));
+const cam = {ox:0, oy:0, tw:60, tox:0, toy:0, ttw:60, room:"near", W:0, H:0, first:true, follow:null, auto:true, pauseUntil:0, hover:null, tile:null};
+const WALL_H = 1.9, GLASS_H = 0.8;
+const isDark = () => { const t = document.documentElement.getAttribute("data-theme"); return t ? t === "dark" : matchMedia("(prefers-color-scheme: dark)").matches; };
+function palette(){
+  return isDark() ? {
+    floor:{atrio:"#343c63", capo:"#4a3f2a", vita:"#4a3338", tech:"#22404f", cont:"#3a3260"}, plank:"rgba(255,255,255,.045)", slabL:"#080b15", slabR:"#05070f",
+    wallA:["#333c60","#232a46"], wallB:["#282f4f","#1a2038"], base:"#141a2e", win:["#1a2a55","#3b5fa8"], winFrame:"#4a5682", sun:"rgba(130,170,255,.07)", star:"rgba(255,255,255,.7)",
+    glass:"rgba(150,185,255,.12)", glassEdge:"rgba(190,215,255,.5)", deskT:"#c9a67c", deskL:"#8d6d4c", screen:"#0e1528", key:"#e9edf7",
+    label:"rgba(13,17,30,.92)", labelText:"#eef1fa", labelSub:"#aab3cf", shadow:"rgba(0,0,0,.42)", leaf:["#6fd39a","#2c8f58"], pot:"#b0785c", ring:"#ffa24a",
+    sofa:"#6d7fd1", dark:"#262b3d", floorText:"rgba(255,255,255,.34)", wood:"#a47a52", metal:"#8f9ab8", lamp:"rgba(255,205,130,.22)", lampShade:"#ffd9a0", rug:"#b9627a", rug2:"#e7b9a2", water:"#7cc8ff", books:["#ff8a5c","#5cc8d6","#f6c445","#b48cf2","#7bd88f"], zzz:"#dfe6ff", okTile:"rgba(79,209,143,.45)", noTile:"rgba(255,122,134,.5)", foot:"#1b2036"
+  } : {
+    floor:{atrio:"#e3e8f6", capo:"#f6e9c4", vita:"#f8dfd4", tech:"#d3ebf5", cont:"#e6dff8"}, plank:"rgba(21,26,43,.05)", slabL:"#b4bdd4", slabR:"#9da7c2",
+    wallA:["#ffffff","#e9edf6"], wallB:["#eef1f8","#d9dfec"], base:"#c3cbdd", win:["#8cc3f2","#d8eeff"], winFrame:"#ffffff", sun:"rgba(255,244,200,.38)", star:"rgba(255,255,255,0)",
+    glass:"rgba(90,130,200,.13)", glassEdge:"rgba(70,100,170,.45)", deskT:"#e8cfa6", deskL:"#c2a47a", screen:"#1b2337", key:"#ffffff",
+    label:"rgba(21,26,43,.92)", labelText:"#ffffff", labelSub:"#c4cbe0", shadow:"rgba(21,26,43,.22)", leaf:["#63c98d","#2a8a55"], pot:"#c88f6e", ring:"#d9620b",
+    sofa:"#6f86e0", dark:"#2b3044", floorText:"rgba(21,26,43,.36)", wood:"#c79a68", metal:"#a8b2cc", lamp:"rgba(255,200,110,.3)", lampShade:"#ffcf8a", rug:"#d9778f", rug2:"#f6d2bf", water:"#59b6f5", books:["#ff8a5c","#39aebd","#e8b21f","#9a6fe8","#4fbf74"], zzz:"#ffffff", okTile:"rgba(28,143,89,.4)", noTile:"rgba(201,50,63,.45)", foot:"#2a3148"
+  };
+}
+let PAL = palette();
+const P = (x, y, z) => [cam.ox + (x - y) * cam.tw / 2, cam.oy + (x + y) * cam.tw / 4 - (z || 0) * cam.tw / 2];
+const toGrid = (sx, sy, c) => { c = c || {ox:cam.ox, oy:cam.oy, tw:cam.tw}; const a = (sx - c.ox) / (c.tw / 2), b = (sy - c.oy) / (c.tw / 4); return [(a + b) / 2, (b - a) / 2]; };
+function soft(pts, fill, r){ cx.beginPath(); pts.forEach((p, i) => i ? cx.lineTo(p[0], p[1]) : cx.moveTo(p[0], p[1])); cx.closePath(); cx.fillStyle = fill; cx.fill(); if (r) { cx.strokeStyle = fill; cx.lineWidth = r; cx.lineJoin = "round"; cx.stroke(); } }
+function rgbOf(c){ if (c[0] === "#") { const n = parseInt(c.slice(1), 16); return [n >> 16, n >> 8 & 255, n & 255]; } return c.match(/\d+/g).slice(0, 3).map(Number); }
+function shade(c, k){ const [r, g, b] = rgbOf(c), f = v => Math.round(v * (1 - k)); return `rgb(${f(r)},${f(g)},${f(b)})`; }
+function mix(c, k){ const [r, g, b] = rgbOf(c), f = v => Math.round(v + (255 - v) * k); return `rgb(${f(r)},${f(g)},${f(b)})`; }
+// Blocco con gli spigoli arrotondati
+function sbox(x, y, w, d, h, col, z0, rr0){ z0 = z0 || 0; const r = cam.tw * (rr0 === undefined ? .07 : rr0);
+  soft([P(x, y + d, h), P(x + w, y + d, h), P(x + w, y + d, z0), P(x, y + d, z0)], shade(col, .12), r);
+  soft([P(x + w, y, h), P(x + w, y + d, h), P(x + w, y + d, z0), P(x + w, y, z0)], shade(col, .3), r);
+  soft([P(x, y, h), P(x + w, y, h), P(x + w, y + d, h), P(x, y + d, h)], mix(col, .14), r);
+}
+function rr(x, y, w, h, r){ cx.beginPath(); if (cx.roundRect) cx.roundRect(x, y, w, h, r); else { cx.moveTo(x + r, y); cx.arcTo(x + w, y, x + w, y + h, r); cx.arcTo(x + w, y + h, x, y + h, r); cx.arcTo(x, y + h, x, y, r); cx.arcTo(x, y, x + w, y, r); cx.closePath(); } }
+function blob(p, rx, ry, c0, c1){ const g = cx.createRadialGradient(p[0] - rx * .35, p[1] - ry * .4, rx * .1, p[0], p[1], Math.max(rx, ry) * 1.1); g.addColorStop(0, c0); g.addColorStop(1, c1); cx.fillStyle = g; cx.beginPath(); cx.ellipse(p[0], p[1], rx, ry, 0, 0, 6.3); cx.fill(); }
+function ground(p, rx, alpha){ const g = cx.createRadialGradient(p[0], p[1], 0, p[0], p[1], rx); g.addColorStop(0, PAL.shadow); g.addColorStop(1, "rgba(0,0,0,0)"); cx.save(); cx.translate(p[0], p[1]); cx.scale(1, .5); cx.translate(-p[0], -p[1]); cx.globalAlpha = alpha || 1; cx.fillStyle = g; cx.beginPath(); cx.arc(p[0], p[1], rx, 0, 6.3); cx.fill(); cx.restore(); }
+
+/* ---- camera ---- */
+function lookAtGrid(x, y, tw){ if (tw) cam.ttw = tw; cam.tox = cam.W / 2 - (x - y) * cam.ttw / 2; cam.toy = cam.H * .56 - (x + y) * cam.ttw / 4; }
+function fitTw(){ return Math.min(cam.W / ((GW + GH) / 2 + .6), cam.H / ((GW + GH) / 4 + WALL_H / 2 + .9)); }
+function clampCam(){
+  cam.ttw = Math.max(fitTw() * .85, Math.min(cam.ttw, 120));
+  let [gx, gy] = toGrid(cam.W / 2, cam.H * .56, {ox:cam.tox, oy:cam.toy, tw:cam.ttw});
+  const nx = Math.max(0, Math.min(GW, gx)), ny = Math.max(0, Math.min(GH, gy));
+  if (nx !== gx || ny !== gy) lookAtGrid(nx, ny);
+}
+function snapCam(){ cam.tw = cam.ttw; cam.ox = cam.tox; cam.oy = cam.toy; }
+function fitRoom(id, snap){
+  cam.room = id; cam.follow = null;
+  if (id === "near") lookAtGrid(15, 8.2, Math.max(56, Math.min(78, cam.W / 10.5)));
+  else {
+    const r = id === "all" ? {x0:0, y0:0, x1:GW, y1:GH} : ROOMS.find(o => o.id === id);
+    const x0 = (r.x0 - r.y1) / 2, x1 = (r.x1 - r.y0) / 2, y0 = (r.x0 + r.y0) / 4 - WALL_H / 2 - .5, y1 = (r.x1 + r.y1) / 4 + .3;
+    cam.ttw = Math.min(cam.W / (x1 - x0), cam.H / (y1 - y0)) * .95; if (id !== "all") cam.ttw = Math.min(cam.ttw, 96);
+    cam.tox = cam.W / 2 - (x0 + x1) / 2 * cam.ttw; cam.toy = cam.H / 2 - (y0 + y1) / 2 * cam.ttw;
+  }
+  if (snap || reduce.matches) snapCam();
+}
+function zoomAt(px, py, tw, snap){
+  const [gx, gy] = toGrid(px, py, {ox:cam.tox, oy:cam.toy, tw:cam.ttw});
+  cam.ttw = Math.max(fitTw() * .85, Math.min(tw, 120)); cam.tox = px - (gx - gy) * cam.ttw / 2; cam.toy = py - (gx + gy) * cam.ttw / 4; clampCam(); if (snap) snapCam();
+}
+function manual(){ cam.follow = null; cam.room = null; cam.pauseUntil = performance.now() + 9000; markRoom(); }
+function resize(){
+  const b = cv.parentElement.getBoundingClientRect(), dpr = Math.min(window.devicePixelRatio || 1, 3);
+  const look = cam.first ? null : toGrid(cam.W / 2, cam.H * .56, {ox:cam.tox, oy:cam.toy, tw:cam.ttw});
+  cam.W = Math.max(b.width, 10); cam.H = Math.max(b.height, 10);
+  cv.width = Math.round(cam.W * dpr); cv.height = Math.round(cam.H * dpr); cam.dpr = dpr;
+  if (cam.room) fitRoom(cam.room, true); else if (look) { lookAtGrid(look[0], look[1]); clampCam(); snapCam(); }
+  cam.first = false;
+}
+
+/* ---- pavimenti, muri, mobili ---- */
+function drawFloors(){
+  const s = .4;
+  soft([P(0, GH, 0), P(GW, GH, 0), P(GW, GH, -s), P(0, GH, -s)], PAL.slabL, 0);
+  soft([P(GW, 0, 0), P(GW, GH, 0), P(GW, GH, -s), P(GW, 0, -s)], PAL.slabR, 0);
+  for (const r of ROOMS) soft([P(r.x0, r.y0), P(r.x1, r.y0), P(r.x1, r.y1), P(r.x0, r.y1)], PAL.floor[r.id], 0);
+  cx.strokeStyle = PAL.plank; cx.lineWidth = 1; cx.beginPath();
+  for (let y = 0; y <= GH; y += .5) { const a = P(0, y), b = P(GW, y); cx.moveTo(a[0], a[1]); cx.lineTo(b[0], b[1]); }
+  cx.stroke();
+  for (let x = 1; x < GW - 1; x += 3) soft([P(x, .15), P(x + 1.7, .15), P(x + 2.5, 2.6), P(x + .8, 2.6)], PAL.sun, 0);
+  for (let y = 1; y < GH - 1; y += 3) soft([P(.15, y), P(.15, y + 1.7), P(2.6, y + 2.5), P(2.6, y + .8)], PAL.sun, 0);
+  const dd = cam.dpr || 1, u = cam.tw / 50;
+  for (const r of ROOMS) { const q = P(r.x0 + .45, r.y1 - .62); cx.setTransform(dd * u, dd * u / 2, -dd * u, dd * u / 2, dd * q[0], dd * q[1]); cx.fillStyle = PAL.floorText; cx.font = "700 21px 'Bricolage Grotesque', Figtree, sans-serif"; cx.textBaseline = "alphabetic"; cx.textAlign = "left"; cx.fillText(r.pav, 0, 0); }
+  cx.setTransform(dd, 0, 0, dd, 0, 0);
+  for (const o of state.furn) if (o.t === "tappeto") { soft([P(o.x + .18, o.y + .18), P(o.x + 1.82, o.y + .18), P(o.x + 1.82, o.y + 1.82), P(o.x + .18, o.y + 1.82)], PAL.rug, cam.tw * .22); soft([P(o.x + .5, o.y + .5), P(o.x + 1.5, o.y + .5), P(o.x + 1.5, o.y + 1.5), P(o.x + .5, o.y + 1.5)], PAL.rug2, cam.tw * .1); }
+}
+function wallGrad(pTop, pBot, cols){ const g = cx.createLinearGradient(0, pTop[1], 0, pBot[1]); g.addColorStop(0, cols[0]); g.addColorStop(1, cols[1]); return g; }
+function drawOuterWalls(){
+  soft([P(0, 0, 0), P(GW, 0, 0), P(GW, 0, WALL_H), P(0, 0, WALL_H)], wallGrad(P(0, 0, WALL_H), P(GW, 0, 0), PAL.wallA), 0);
+  soft([P(0, 0, 0), P(0, GH, 0), P(0, GH, WALL_H), P(0, 0, WALL_H)], wallGrad(P(0, 0, WALL_H), P(0, GH, 0), PAL.wallB), 0);
+  soft([P(0, 0, 0), P(GW, 0, 0), P(GW, 0, .12), P(0, 0, .12)], PAL.base, 0); soft([P(0, 0, 0), P(0, GH, 0), P(0, GH, .12), P(0, 0, .12)], PAL.base, 0);
+  const r = cam.tw * .09, win = q => { soft(q, PAL.winFrame, r * 1.9); soft(q, wallGrad(q[2], q[0], PAL.win), r); };
+  for (let x = 1; x < GW - 1; x += 3) { win([P(x + .1, 0, .6), P(x + 1.6, 0, .6), P(x + 1.6, 0, 1.5), P(x + .1, 0, 1.5)]); const st = P(x + .5, 0, 1.25); cx.fillStyle = PAL.star; cx.beginPath(); cx.arc(st[0], st[1], Math.max(1, cam.tw * .018), 0, 6.3); cx.arc(st[0] + cam.tw * .35, st[1] + cam.tw * .02, Math.max(.8, cam.tw * .012), 0, 6.3); cx.fill(); }
+  for (let y = 1; y < GH - 1; y += 3) win([P(0, y + .1, .6), P(0, y + 1.6, .6), P(0, y + 1.6, 1.5), P(0, y + .1, 1.5)]);
+}
+function glass(c, i, alongY){
+  const q = alongY ? [P(c, i, 0), P(c, i + 1, 0), P(c, i + 1, GLASS_H), P(c, i, GLASS_H)] : [P(c, i, 0), P(c + 1, i, 0), P(c + 1, i, GLASS_H), P(c, i, GLASS_H)];
+  soft(q, PAL.glass, 0); cx.strokeStyle = PAL.glassEdge; cx.lineWidth = Math.max(1, cam.tw * .03); cx.lineCap = "round"; cx.beginPath(); cx.moveTo(q[3][0], q[3][1]); cx.lineTo(q[2][0], q[2][1]); cx.stroke();
+}
+function drawFurn(o, t, ghost){
+  const x = o.x, y = o.y, s = cam.tw;
+  if (ghost) cx.globalAlpha = .6;
+  if (o.t === "pianta") { ground(P(x + .5, y + .5), s * .34); sbox(x + .32, y + .32, .36, .36, .3, PAL.pot); const sw = reduce.matches ? 0 : Math.sin(t * 1.3 + x) * s * .012; for (const [dx, dy, dz, r] of [[-.12, .04, .62, .2], [.13, -.02, .68, .21], [0, .02, .86, .24]]) { const p = P(x + .5 + dx, y + .5 + dy, dz); blob([p[0] + sw, p[1]], s * r, s * r, PAL.leaf[0], PAL.leaf[1]); } }
+  else if (o.t === "divano") { ground(P(x + 1, y + .55), s * .9, .8); sbox(x + .08, y + .1, 1.84, .22, .68, shade(PAL.sofa, .1)); sbox(x + .08, y + .26, 1.84, .58, .3, PAL.sofa, 0, .12); sbox(x + .08, y + .2, .2, .64, .46, shade(PAL.sofa, .08)); sbox(x + 1.72, y + .2, .2, .64, .46, shade(PAL.sofa, .08)); }
+  else if (o.t === "poltrona") { ground(P(x + .5, y + .55), s * .42, .8); sbox(x + .16, y + .14, .68, .2, .68, shade(PAL.sofa, .1)); sbox(x + .16, y + .28, .68, .54, .3, PAL.sofa, 0, .12); }
+  else if (o.t === "lampada") { const b = P(x + .5, y + .5); const g = cx.createRadialGradient(b[0], b[1], 0, b[0], b[1], s * 1.5); g.addColorStop(0, PAL.lamp); g.addColorStop(1, "rgba(255,200,120,0)"); cx.save(); cx.translate(b[0], b[1]); cx.scale(1, .5); cx.translate(-b[0], -b[1]); cx.fillStyle = g; cx.beginPath(); cx.arc(b[0], b[1], s * 1.5, 0, 6.3); cx.fill(); cx.restore();
+    blob(b, s * .14, s * .07, PAL.metal, shade(PAL.metal, .3)); const top = P(x + .5, y + .5, 1.2); cx.strokeStyle = PAL.metal; cx.lineWidth = Math.max(1.5, s * .035); cx.lineCap = "round"; cx.beginPath(); cx.moveTo(b[0], b[1]); cx.lineTo(top[0], top[1]); cx.stroke();
+    cx.fillStyle = PAL.lampShade; cx.beginPath(); cx.moveTo(top[0] - s * .1, top[1] - s * .22); cx.lineTo(top[0] + s * .1, top[1] - s * .22); cx.quadraticCurveTo(top[0] + s * .2, top[1] - s * .05, top[0] + s * .19, top[1] + s * .02); cx.quadraticCurveTo(top[0], top[1] + s * .08, top[0] - s * .19, top[1] + s * .02); cx.quadraticCurveTo(top[0] - s * .2, top[1] - s * .05, top[0] - s * .1, top[1] - s * .22); cx.fill(); }
+  else if (o.t === "libreria") { ground(P(x + .5, y + .6), s * .5, .8); sbox(x + .1, y + .28, .8, .44, 1.35, PAL.wood); for (let k = 0; k < 3; k++) { const z = .14 + k * .4; soft([P(x + .16, y + .72, z), P(x + .84, y + .72, z), P(x + .84, y + .72, z + .32), P(x + .16, y + .72, z + .32)], shade(PAL.wood, .45), 0); for (let j = 0; j < 5; j++) { const u = x + .19 + j * .13; soft([P(u, y + .72, z), P(u + .1, y + .72, z), P(u + .1, y + .72, z + .2 + ((j * 7 + k * 3) % 4) * .025), P(u, y + .72, z + .2 + ((j * 7 + k * 3) % 4) * .025)], PAL.books[(j + k * 2) % 5], 0); } } }
+  else if (o.t === "tavolino") { const c = P(x + .5, y + .5); ground(c, s * .4, .8); const top = P(x + .5, y + .5, .36); cx.strokeStyle = shade(PAL.wood, .35); cx.lineWidth = Math.max(2, s * .07); cx.lineCap = "round"; cx.beginPath(); cx.moveTo(c[0], c[1]); cx.lineTo(top[0], top[1]); cx.stroke(); cx.fillStyle = shade(PAL.wood, .22); cx.beginPath(); cx.ellipse(top[0], top[1] + s * .035, s * .36, s * .18, 0, 0, 6.3); cx.fill(); blob(top, s * .36, s * .18, mix(PAL.wood, .25), PAL.wood); blob([top[0] + s * .08, top[1] - s * .03], s * .07, s * .04, "#ffffff", PAL.key); }
+  else if (o.t === "tv") { ground(P(x + .5, y + .55), s * .5, .8); sbox(x + .1, y + .34, .8, .32, .36, PAL.wood); sbox(x + .1, y + .46, .8, .07, 1.02, PAL.dark, .42, .05); const q = [P(x + .16, y + .535, .49), P(x + .84, y + .535, .49), P(x + .84, y + .535, .96), P(x + .16, y + .535, .96)]; soft(q, wallGrad(q[2], q[0], PAL.win), s * .03); }
+  else if (o.t === "casse") { ground(P(x + .5, y + .55), s * .46, .8); for (const u of [.1, .56]) { sbox(x + u, y + .34, .34, .32, .8, PAL.dark); blob(P(x + u + .17, y + .66, .5), s * .085, s * .1, "#4a5068", "#14172340"); blob(P(x + u + .17, y + .66, .68), s * .04, s * .045, PAL.ring, "#141723"); } }
+  else if (o.t === "tastiera") { ground(P(x + .5, y + .55), s * .46, .8); cx.strokeStyle = PAL.metal; cx.lineWidth = Math.max(1.5, s * .035); cx.lineCap = "round"; cx.beginPath(); for (const [a0, a1] of [[P(x + .15, y + .7), P(x + .85, y + .4, .46)], [P(x + .85, y + .7), P(x + .15, y + .4, .46)]]) { cx.moveTo(a0[0], a0[1]); cx.lineTo(a1[0], a1[1]); } cx.stroke(); sbox(x + .04, y + .34, .92, .34, .56, PAL.dark, .46, .05); soft([P(x + .1, y + .5, .565), P(x + .9, y + .5, .565), P(x + .9, y + .65, .565), P(x + .1, y + .65, .565)], "#f4f6fb", 0); cx.strokeStyle = "#14172380"; cx.lineWidth = 1; cx.beginPath(); for (let k = 1; k < 10; k++) { const a0 = P(x + .1 + k * .08, y + .5, .565), a1 = P(x + .1 + k * .08, y + .65, .565); cx.moveTo(a0[0], a0[1]); cx.lineTo(a1[0], a1[1]); } cx.stroke(); }
+  else if (o.t === "microfono") { const b = P(x + .5, y + .5), top = P(x + .5, y + .5, 1.02); ground(b, s * .3, .8); blob(b, s * .16, s * .08, PAL.metal, shade(PAL.metal, .35)); cx.strokeStyle = PAL.metal; cx.lineWidth = Math.max(1.5, s * .03); cx.lineCap = "round"; cx.beginPath(); cx.moveTo(b[0], b[1]); cx.lineTo(top[0], top[1]); cx.stroke(); blob([top[0], top[1] - s * .06], s * .075, s * .11, "#5a607a", PAL.dark); cx.strokeStyle = PAL.metal; cx.lineWidth = Math.max(1, s * .02); cx.beginPath(); cx.ellipse(top[0] + s * .13, top[1] - s * .06, s * .035, s * .13, 0, 0, 6.3); cx.stroke(); }
+  else if (o.t === "tapis") { ground(P(x + .5, y + .5), s * .55, .8); sbox(x + .22, y + .04, .56, .92, .16, PAL.dark); soft([P(x + .28, y + .16, .165), P(x + .72, y + .16, .165), P(x + .72, y + .9, .165), P(x + .28, y + .9, .165)], "#3d4358", s * .02); sbox(x + .24, y + .06, .06, .06, .95, PAL.metal, .16, .03); sbox(x + .7, y + .06, .06, .06, .95, PAL.metal, .16, .03); sbox(x + .24, y + .04, .52, .1, 1.02, PAL.dark, .9, .04); }
+  else if (o.t === "manubri") { ground(P(x + .5, y + .55), s * .46, .8); sbox(x + .12, y + .36, .76, .3, .32, PAL.metal); for (const u of [.26, .5, .74]) { blob(P(x + u, y + .44, .42), s * .07, s * .08, "#5a607a", PAL.dark); blob(P(x + u, y + .6, .42), s * .07, s * .08, "#5a607a", PAL.dark); } }
+  else if (o.t === "frigo") { ground(P(x + .5, y + .55), s * .45, .8); sbox(x + .2, y + .26, .6, .5, 1.4, PAL.key); cx.strokeStyle = shade(PAL.key, .3); cx.lineWidth = Math.max(1, s * .02); cx.lineCap = "round"; cx.beginPath(); let a0 = P(x + .2, y + .76, .9), a1 = P(x + .8, y + .76, .9); cx.moveTo(a0[0], a0[1]); cx.lineTo(a1[0], a1[1]); a0 = P(x + .3, y + .76, 1.0); a1 = P(x + .3, y + .76, 1.25); cx.moveTo(a0[0], a0[1]); cx.lineTo(a1[0], a1[1]); a0 = P(x + .3, y + .76, .55); a1 = P(x + .3, y + .76, .8); cx.moveTo(a0[0], a0[1]); cx.lineTo(a1[0], a1[1]); cx.stroke(); }
+  else if (o.t === "biliardino") { ground(P(x + 1, y + .55), s * .95, .8); for (const [u, v] of [[.2, .26], [1.72, .26], [.2, .68], [1.72, .68]]) sbox(x + u, y + v, .08, .08, .34, shade(PAL.wood, .3), 0, .02); sbox(x + .12, y + .18, 1.76, .64, .58, PAL.wood, .32); soft([P(x + .22, y + .27, .59), P(x + 1.78, y + .27, .59), P(x + 1.78, y + .73, .59), P(x + .22, y + .73, .59)], PAL.leaf[1], s * .03); cx.strokeStyle = PAL.metal; cx.lineWidth = Math.max(1, s * .022); cx.lineCap = "round"; cx.beginPath(); for (const u of [.45, .8, 1.2, 1.55]) { const a0 = P(x + u, y + .08, .66), a1 = P(x + u, y + .92, .66); cx.moveTo(a0[0], a0[1]); cx.lineTo(a1[0], a1[1]); } cx.stroke(); }
+  else if (o.t === "img") { const im = state.imgs[o.id]; if (im && im.el.complete && im.el.naturalWidth) { const w = s * o.s, h = w * im.el.naturalHeight / im.el.naturalWidth, b = P(x + .5, y + .62); ground(P(x + .5, y + .55), Math.min(w * .5, s * .9), .9); cx.drawImage(im.el, b[0] - w / 2, b[1] - h, w, h); } }
+  else if (o.t === "acqua") { ground(P(x + .5, y + .55), s * .36, .8); sbox(x + .3, y + .3, .4, .4, .72, PAL.key); const p = P(x + .5, y + .5, .98); cx.globalAlpha *= .85; blob(p, s * .17, s * .22, mix(PAL.water, .5), PAL.water); cx.globalAlpha = ghost ? .6 : 1; }
+  cx.globalAlpha = 1;
+}
+function drawDesk(dk, t){
+  if (dk.counter) { ground(P(dk.x + 1, dk.y + .55), cam.tw * .95, .7); sbox(dk.x + .06, dk.y + .2, dk.w - .12, .6, .56, PAL.deskT, 0, .1); sbox(dk.x + 1.36, dk.y + .38, .26, .26, .7, dk.col, .57); return; }
+  const on = state.status[dk.owner].kind === "work", mid = dk.y + dk.d / 2;
+  ground(P(dk.x + .5, mid), cam.tw * .55, .7);
+  sbox(dk.x + .14, dk.y + .1, .68, dk.d - .2, .44, PAL.deskT, 0, .1);
+  soft([P(dk.x + .22, mid - .15, .45), P(dk.x + .4, mid - .15, .45), P(dk.x + .4, mid + .15, .45), P(dk.x + .22, mid + .15, .45)], PAL.key, cam.tw * .03);
+  const mug = P(dk.x + .34, mid + .3, .47); blob(mug, cam.tw * .05, cam.tw * .035, "#ffffff", dk.col);
+  if (on) { cx.globalAlpha = reduce.matches ? .45 : .3 + .22 * Math.sin(t * 9); soft([P(dk.x + .2, mid - .26, .45), P(dk.x + .6, mid - .22, .45), P(dk.x + .6, mid + .22, .45), P(dk.x + .2, mid + .26, .45)], dk.col, cam.tw * .05); cx.globalAlpha = 1; }
+  sbox(dk.x + .62, mid - .27, .07, .54, .95, on ? mix(dk.col, .15) : shade(dk.col, .15), .52, .05);
+}
+
+/* ---- robot morbidi ---- */
+function drawBot(b, t){
+  const a = b.a, st = state.status[a.id].kind, still = reduce.matches, s = cam.tw, asleep = st === "sleep" && !b.moving;
+  const [fx, fy] = b.face, front = fx + fy > 0, dir = (fx > 0 || fy < 0) ? 1 : -1;
+  const walking = b.moving && !still, atDesk = !b.moving && b.x === a.seat[0] && b.y === a.seat[1];
+  const typing = st === "work" && atDesk && !still, carry = b.carry && b.moving;
+  const ph = t * 9.5 + b.phase, sw = walking ? Math.sin(ph) : 0;
+  const hopT = t - b.hop, hop = hopT >= 0 && hopT < .5 && !still ? Math.sin(hopT / .5 * Math.PI) * .2 : 0, waving = hopT >= 0 && hopT < 1.3;
+  const bob = asleep ? (still ? 0 : Math.sin(t * 1.1 + b.phase) * .018) - .03 : walking ? Math.abs(Math.cos(ph)) * .045 : typing ? Math.sin(t * 6 + b.phase) * .01 : still ? 0 : Math.sin(t * 1.7 + b.phase) * .012;
+  const g0 = P(b.x + .5, b.y + .5, 0);
+  ground(g0, s * (.36 - hop * .3), 1);
+  if (st === "work" || cam.hover === a.id || cam.follow === a.id) { cx.strokeStyle = st === "work" ? PAL.ring : a.colore; cx.lineWidth = Math.max(1.5, s * .035); cx.globalAlpha = st === "work" && !still ? .5 + .4 * Math.sin(t * 5) : .85; cx.beginPath(); cx.ellipse(g0[0], g0[1], .44 * s, .22 * s, 0, 0, 6.3); cx.stroke(); cx.globalAlpha = 1; }
+  cx.save(); cx.translate(g0[0], g0[1] - (bob + hop) * s); cx.scale(s, s); if (walking) cx.rotate(sw * .045); else if (asleep) cx.rotate(.07 * dir);
+  const light = mix(a.colore, .42), deep = shade(a.colore, .3), lin = (x0, x1, c0, c1) => { const g = cx.createLinearGradient(x0, 0, x1, 0); g.addColorStop(0, c0); g.addColorStop(1, c1); return g; };
+  // piedi
+  for (const k of [-1, 1]) { const lift = walking ? Math.max(0, k * sw) * .07 : 0, fwd = walking ? k * sw * .05 * dir : 0; cx.fillStyle = PAL.foot; cx.beginPath(); cx.ellipse(k * .1 + fwd, -.035 - lift + bob, .085, .05, 0, 0, 6.3); cx.fill(); }
+  const arm = (k, behind) => { // braccio: capsula che ruota dalla spalla
+    let ang = walking ? -k * sw * .7 * dir : 0, len = .19;
+    if (typing) ang = dir * (1.15 + Math.sin(t * 15 + k * 1.7) * .16); else if (carry) ang = dir * 1.2; else if (waving && k === 1) ang = -2.5 + Math.sin(hopT * 16) * .35;
+    cx.save(); cx.translate(k * .185, -.4); cx.rotate(ang); cx.fillStyle = behind ? deep : shade(a.colore, .12); rr(-.045, -.02, .09, len, .045); cx.fill(); cx.fillStyle = light; cx.beginPath(); cx.arc(0, len - .03, .05, 0, 6.3); cx.fill(); cx.restore();
+  };
+  arm(-dir, true);
+  if (carry && !front) { cx.fillStyle = "#f4f6fb"; rr(dir * .1, -.42, dir * .16, .12, .02); cx.fill(); }
+  // corpo
+  cx.fillStyle = lin(-.18, .18, light, deep); rr(-.175, -.47, .35, .36, .15); cx.fill();
+  if (front) { cx.fillStyle = "rgba(255,255,255,.2)"; rr(-.09 + dir * .03, -.39, .18, .15, .06); cx.fill();
+    if (a.id === "maggiordomo") { cx.fillStyle = "#1a1d2b"; cx.beginPath(); cx.moveTo(dir * .03, -.4); cx.lineTo(dir * .03 - .07, -.44); cx.lineTo(dir * .03 - .07, -.36); cx.closePath(); cx.moveTo(dir * .03, -.4); cx.lineTo(dir * .03 + .07, -.44); cx.lineTo(dir * .03 + .07, -.36); cx.closePath(); cx.fill(); }
+    if (a.id === "capo") { cx.fillStyle = "#1a1d2b"; cx.beginPath(); cx.moveTo(dir * .03 - .03, -.44); cx.lineTo(dir * .03 + .03, -.44); cx.lineTo(dir * .03 + .04, -.3); cx.lineTo(dir * .03, -.25); cx.lineTo(dir * .03 - .04, -.3); cx.closePath(); cx.fill(); }
+  } else { cx.fillStyle = "rgba(0,0,0,.18)"; rr(-.1, -.42, .2, .22, .06); cx.fill(); }
+  arm(dir, false);
+  if (carry && front) { cx.fillStyle = "#f4f6fb"; rr(dir > 0 ? .08 : -.26, -.4, .18, .13, .025); cx.fill(); cx.fillStyle = "rgba(20,26,43,.25)"; cx.fillRect(dir > 0 ? .1 : -.24, -.365, .14, .012); cx.fillRect(dir > 0 ? .1 : -.24, -.335, .1, .012); }
+  // testa
+  const hy = -.9 + (typing ? Math.sin(t * 3 + b.phase) * .008 : 0);
+  cx.fillStyle = deep; cx.beginPath(); cx.arc(-.235, hy + .21, .05, 0, 6.3); cx.arc(.235, hy + .21, .05, 0, 6.3); cx.fill();
+  const hg = cx.createRadialGradient(-.09, hy + .08, .03, 0, hy + .2, .36); hg.addColorStop(0, mix(a.colore, .62)); hg.addColorStop(.6, mix(a.colore, .2)); hg.addColorStop(1, shade(a.colore, .18));
+  cx.fillStyle = hg; rr(-.235, hy, .47, .41, .17); cx.fill();
+  if (front) {
+    const vx = dir * .035; cx.fillStyle = "#121627"; rr(-.175 + vx, hy + .09, .35, .23, .1); cx.fill();
+    cx.fillStyle = "rgba(255,255,255,.1)"; rr(-.15 + vx, hy + .105, .3, .07, .04); cx.fill();
+    const blink = !still && ((t + b.phase) % 4.2) < .13, eye = st === "err" ? "#ff7a86" : st === "work" ? "#ffe9a8" : "#bff3ff";
+    cx.fillStyle = eye; cx.shadowColor = eye; cx.shadowBlur = s * .12;
+    for (const k of [-1, 1]) { cx.beginPath(); if (blink || asleep) cx.ellipse(vx + k * .075, hy + .21, .04, .008, 0, 0, 6.3); else if (waving) { cx.arc(vx + k * .075, hy + .225, .04, Math.PI, 0); } else cx.ellipse(vx + k * .075, hy + .21, .036, st === "work" ? .03 : .046, 0, 0, 6.3); cx.fill(); }
+    cx.shadowBlur = 0;
+  } else { cx.strokeStyle = "rgba(0,0,0,.16)"; cx.lineWidth = .018; cx.lineCap = "round"; cx.beginPath(); for (const k of [-.06, 0, .06]) { cx.moveTo(-.08, hy + .2 + k); cx.lineTo(.08, hy + .2 + k); } cx.stroke(); }
+  // antenna
+  cx.strokeStyle = deep; cx.lineWidth = .028; cx.lineCap = "round"; cx.beginPath(); cx.moveTo(0, hy); cx.quadraticCurveTo(sw * .03, hy - .07, sw * .04, hy - .12); cx.stroke();
+  const ac = st === "work" ? PAL.ring : a.colore; cx.fillStyle = ac; if (st === "work") { cx.shadowColor = ac; cx.shadowBlur = s * .2; } cx.beginPath(); cx.arc(sw * .04, hy - .14, .05, 0, 6.3); cx.fill(); cx.shadowBlur = 0;
+  cx.restore();
+  if (asleep) { cx.font = `700 ${Math.max(10, s * .2)}px Figtree, sans-serif`; cx.textAlign = "left"; cx.fillStyle = PAL.zzz; for (let k = 0; k < 3; k++) { const u = still ? k / 3 : ((t * .32 + k / 3 + b.phase) % 1); cx.globalAlpha = (1 - u) * .85; cx.fillText("z", g0[0] + s * (.22 + u * .3), g0[1] - s * (1.0 + u * .7)); } cx.globalAlpha = 1; }
+  b.sx = g0[0]; b.sy = g0[1] - .5 * s; b.ly = g0[1] - (1.1 + bob + hop) * s;
+}
+function subText(b){
+  const st = state.status[b.a.id];
+  if (st.kind === "idle" || st.text === "Dorme") return "";
+  if (st.kind === "work" && b.live) return "✎ " + b.live;
+  return st.text.length > 38 ? st.text.slice(0, 37) + "…" : st.text;
+}
+function drawLabels(){
+  const s = cam.tw, all = s >= 52;
+  const list = Object.values(bots).filter(b => b.sx > 8 && b.sx < cam.W - 8 && b.sy > 0 && b.ly < cam.H && ((all && !state.night) || (state.status[b.a.id].kind !== "idle" && state.status[b.a.id].text !== "Dorme") || cam.hover === b.a.id)).sort((a, b) => a.ly - b.ly);
+  cx.textBaseline = "middle"; cx.textAlign = "left";
+  for (const b of list) {
+    const sub = subText(b), f1 = "700 12px Figtree, system-ui, sans-serif", f2 = "500 11px Figtree, system-ui, sans-serif";
+    cx.font = f1; const w1 = cx.measureText(b.a.nome).width; cx.font = f2; const w2 = sub ? cx.measureText(sub).width : 0;
+    const w = Math.max(w1, w2) + 22, h = sub ? 38 : 22, x = Math.max(4, Math.min(cam.W - w - 4, b.sx - w / 2)), y = b.ly - h - 8;
+    cx.fillStyle = PAL.label; rr(x, y, w, h, 9); cx.fill();
+    cx.beginPath(); cx.moveTo(b.sx - 5, y + h - .5); cx.lineTo(b.sx + 5, y + h - .5); cx.lineTo(b.sx, y + h + 5); cx.closePath(); cx.fill();
+    cx.fillStyle = b.a.colore; cx.beginPath(); cx.arc(x + 9, y + 11, 3.5, 0, 6.3); cx.fill();
+    cx.fillStyle = PAL.labelText; cx.font = f1; cx.fillText(b.a.nome, x + 16, y + 11.5);
+    if (sub) { cx.fillStyle = PAL.labelSub; cx.font = f2; cx.fillText(sub, x + 9, y + 27); }
+  }
+}
+let lastT = 0, running = false;
+function frame(ms){
+  const t = ms / 1000, dt = Math.min(.05, t - lastT || 0); lastT = t;
+  for (const b of Object.values(bots)) if (b.path) {
+    let left = (reduce.matches ? 999 : 2.9) * dt;
+    while (b.path && left > 0) {
+      const [tx, ty] = b.path[0], dx = tx - b.x, dy = ty - b.y, d = Math.hypot(dx, dy);
+      if (d > .001) b.face = Math.abs(dx) >= Math.abs(dy) ? [Math.sign(dx), 0] : [0, Math.sign(dy)];
+      if (d <= left) { b.x = tx; b.y = ty; left -= d; b.path.shift(); if (!b.path.length) { b.path = null; b.moving = false; const f = b.done; b.done = null; if (f) f(); } }
+      else { b.x += dx / d * left; b.y += dy / d * left; left = 0; }
+    }
+  }
+  // regia: la vista segue chi hai scelto, oppure da sola chi sta lavorando
+  let tgt = cam.follow ? bots[cam.follow] : null;
+  if (!tgt && cam.auto && ms > cam.pauseUntil && state.job && (state.job.stato === "lavoro" || state.job.stato === "pianifica")) {
+    const all = Object.values(bots);
+    tgt = all.find(b => b.carry && b.moving) || all.find(b => state.status[b.a.id].kind === "work" && b.a.id === state.focus) || all.find(b => state.status[b.a.id].kind === "work");
+    if (tgt && cam.room) { cam.room = null; markRoom(); }
+  }
+  if (tgt) lookAtGrid(tgt.x + .5, tgt.y + .5, Math.max(cam.ttw, Math.min(70, cam.W / 9)));
+  const k = reduce.matches ? 1 : 1 - Math.pow(.0015, dt);
+  cam.tw += (cam.ttw - cam.tw) * k; cam.ox += (cam.tox - cam.ox) * k; cam.oy += (cam.toy - cam.oy) * k;
+  const d = cam.dpr || 1; cx.setTransform(d, 0, 0, d, 0, 0); cx.clearRect(0, 0, cam.W, cam.H);
+  drawFloors(); drawOuterWalls();
+  if (state.decor.on && cam.tile) { const ty = decorType(), f = ty && FURN[ty], [gx, gy] = cam.tile, bad = ty ? whyNot(ty, gx, gy) : furnAt(gx, gy) < 0, w = f ? f.w : 1, dd2 = f ? f.d : 1; soft([P(gx, gy), P(gx + w, gy), P(gx + w, gy + dd2), P(gx, gy + dd2)], bad ? PAL.noTile : PAL.okTile, 0); }
+  const items = [];
+  for (const w of WALLS) items.push({k:w.k, f:() => glass(w.c, w.i, w.ay)});
+  for (const dk of DESKS) items.push({k:dk.x + dk.w / 2 + dk.y + dk.d / 2, f:() => drawDesk(dk, t)});
+  items.push({k:COFFEE[0] + COFFEE[1] + 1, f:() => { ground(P(COFFEE[0] + .5, COFFEE[1] + .6), cam.tw * .45, .8); sbox(COFFEE[0] + .2, COFFEE[1] + .22, .6, .56, 1, PAL.metal); soft([P(COFFEE[0] + .3, COFFEE[1] + .78, .55), P(COFFEE[0] + .7, COFFEE[1] + .78, .55), P(COFFEE[0] + .7, COFFEE[1] + .78, .85), P(COFFEE[0] + .3, COFFEE[1] + .78, .85)], PAL.screen, cam.tw * .03); const c = P(COFFEE[0] + .5, COFFEE[1] + .78, .42); blob(c, cam.tw * .05, cam.tw * .05, "#fff", PAL.ring); }});
+  for (const o of state.furn) if (FURN[o.t] && o.t !== "tappeto") items.push({k:o.x + FURN[o.t].w / 2 + o.y + .5, f:() => drawFurn(o, t)});
+  { const ty = state.decor.on && cam.tile ? decorType() : null; if (ty && ty !== "tappeto" && !whyNot(ty, cam.tile[0], cam.tile[1])) { const src = state.decor.item === "closet" ? state.closet[state.decor.ci] : {id:state.decor.img, s:state.decor.size}; const o = {t:ty, x:cam.tile[0], y:cam.tile[1], id:src.id, s:src.s}; items.push({k:o.x + FURN[ty].w / 2 + o.y + .5, f:() => drawFurn(o, t, true)}); } }
+  for (const b of Object.values(bots)) items.push({k:b.x + b.y + 1, f:() => drawBot(b, t)});
+  items.sort((a, b) => a.k - b.k); for (const it of items) it.f();
+  state.nightK = (state.nightK || 0) + ((state.night ? 1 : 0) - (state.nightK || 0)) * (reduce.matches ? 1 : Math.min(1, dt * 2.2));
+  if (state.nightK > .01) { cx.fillStyle = `rgba(5,7,22,${.55 * state.nightK})`; cx.fillRect(0, 0, cam.W, cam.H); for (const o of state.furn) if (o.t === "lampada") { const bp = P(o.x + .5, o.y + .5, .6), g = cx.createRadialGradient(bp[0], bp[1], 0, bp[0], bp[1], cam.tw * 1.9); g.addColorStop(0, `rgba(255,205,130,${.4 * state.nightK})`); g.addColorStop(1, "rgba(255,200,120,0)"); cx.fillStyle = g; cx.beginPath(); cx.arc(bp[0], bp[1], cam.tw * 1.9, 0, 6.3); cx.fill(); } }
+  drawLabels(); placePop();
+  const cg = toGrid(cam.W / 2, cam.H * .56), here = ROOMS.find(r => r.id === roomAt(Math.floor(cg[0]), Math.floor(cg[1]))), wtxt = cam.tw < fitTw() * 1.25 ? "Tutto il palazzo" : here ? here.nome : "Fuori dal palazzo", wel = document.getElementById("where"); if (wel.textContent !== wtxt) wel.textContent = wtxt;
+  if (!document.hidden) requestAnimationFrame(frame); else running = false;
+}
+function startLoop(){ if (!running) { running = true; requestAnimationFrame(frame); } }
+document.addEventListener("visibilitychange", () => { if (!document.hidden) startLoop(); });
+
+/* ---- camminate ---- */
+function goTo(b, tx, ty){
+  return new Promise(res => {
+    const path = findPath(Math.round(b.x), Math.round(b.y), tx, ty);
+    if (b.done) { const f = b.done; b.done = null; f(); }
+    if (!path || (path.length < 2 && Math.hypot(b.x - tx, b.y - ty) < .01)) { b.path = null; b.moving = false; if (!path) { b.x = tx; b.y = ty; } res(); return; }
+    b.path = path; b.moving = true; b.done = res;
+  });
+}
+const pause = ms => new Promise(r => setTimeout(r, reduce.matches ? 0 : ms));
+function lookAt(b, x, y){ const dx = x - b.x, dy = y - b.y; if (dx || dy) b.face = Math.abs(dx) >= Math.abs(dy) ? [Math.sign(dx), 0] : [0, Math.sign(dy)]; }
+function goHome(b, tok){ return goTo(b, b.a.seat[0], b.a.seat[1]).then(() => { if (b.tok === tok) { b.face = b.a.face; b.carry = false; b.wander = false; } }); }
+function walk(fromId, toId, andBack){
+  const b = bots[fromId]; if (!b) return Promise.resolve();
+  const tok = ++b.tok; b.wander = false;
+  if (!toId) { b.carry = false; return goHome(b, tok); }
+  const t = BY[toId], [tx, ty] = spotNear(t); b.carry = true;
+  return goTo(b, tx, ty).then(() => {
+    if (b.tok !== tok) return;
+    lookAt(b, t.seat[0], t.seat[1]); b.carry = false;
+    if (andBack) return pause(900).then(() => { if (b.tok === tok) return goHome(b, tok); });
+  });
+}
+// Vita d'ufficio: ogni tanto chi è libero si alza, fa due passi e torna. Non è lavoro, e lo stato lo dice.
+function stroll(){
+  if (reduce.matches || document.hidden || state.decor.on || state.night) return;
+  const all = Object.values(bots);
+  if (all.filter(b => b.wander).length >= 3) return;
+  const free = all.filter(b => !b.moving && !b.wander && state.status[b.a.id].kind === "idle" && b.x === b.a.seat[0] && b.y === b.a.seat[1] && state.pop !== b.a.id && !(state.chat && !document.getElementById("chat").hidden && state.chat.agent === b.a.id));
+  if (!free.length) return;
+  const b = free[Math.floor(Math.random() * free.length)], tok = ++b.tok, r = Math.random();
+  let tx, ty, look, text;
+  if (r < .3) { tx = COFFEE[0] - 1; ty = COFFEE[1]; look = COFFEE; text = "Va a prendere un caffè"; }
+  else { const pool = AGENTS.filter(o => o.id !== b.a.id && (r < .8 ? o.stanza === b.a.stanza : true)); const o = pool.length ? pool[Math.floor(Math.random() * pool.length)] : null; if (!o) return; [tx, ty] = spotNear(o); look = o.seat; text = "Passa a salutare " + o.nome; }
+  b.wander = true; state.status[b.a.id] = {text, kind:"stroll"}; rowStatus(b.a.id);
+  goTo(b, tx, ty).then(() => { if (b.tok !== tok) return; lookAt(b, look[0], look[1]); return pause(1400 + Math.random() * 1800).then(() => { if (b.tok === tok) return goHome(b, tok); }); })
+    .then(() => { if (b.tok === tok && state.status[b.a.id].kind === "stroll") idle(b.a.id); });
+}
+// Se il motore chiama un agente che era in giro, torna subito alla scrivania.
+function recall(id){ const b = bots[id], k = state.status[id].kind; if (k === "work") state.focus = id; if (k !== "work") b.live = ""; if (b && b.wander && k !== "stroll") { const tok = ++b.tok; b.wander = false; if (k !== "walk") goHome(b, tok); } }
+
+/* ---- dita e mouse: trascina, zoom, tocco ---- */
+const ptrs = new Map(); let drag = null, pinch = null;
+const local = e => { const r = cv.getBoundingClientRect(); return [e.clientX - r.left, e.clientY - r.top]; };
+function botAt(x, y){ let best = null, bd = Math.max(26, cam.tw * .55); for (const b of Object.values(bots)) { const d = Math.hypot(b.sx - x, b.sy - y); if (d < bd) { bd = d; best = b; } } return best; }
+cv.addEventListener("pointerdown", e => {
+  try { cv.setPointerCapture(e.pointerId); } catch (err) {}
+  const [x, y] = local(e); ptrs.set(e.pointerId, [x, y]);
+  if (ptrs.size === 1) drag = {x, y, ox:cam.tox, oy:cam.toy, moved:false};
+  else if (ptrs.size === 2) { const [a, b] = [...ptrs.values()]; pinch = {d:Math.hypot(a[0] - b[0], a[1] - b[1]) || 1, tw:cam.ttw}; drag = null; manual(); }
+});
+cv.addEventListener("pointermove", e => {
+  const [x, y] = local(e);
+  if (ptrs.has(e.pointerId)) ptrs.set(e.pointerId, [x, y]);
+  if (pinch && ptrs.size === 2) { const [a, b] = [...ptrs.values()]; zoomAt((a[0] + b[0]) / 2, (a[1] + b[1]) / 2, pinch.tw * Math.hypot(a[0] - b[0], a[1] - b[1]) / pinch.d, true); return; }
+  if (drag && ptrs.size === 1) {
+    if (!drag.moved && Math.hypot(x - drag.x, y - drag.y) > 6) { drag.moved = true; manual(); cv.style.cursor = "grabbing"; }
+    if (drag.moved) { cam.tox = drag.ox + x - drag.x; cam.toy = drag.oy + y - drag.y; clampCam(); snapCam(); }
+    return;
+  }
+  const g = toGrid(x, y); cam.tile = [Math.floor(g[0]), Math.floor(g[1])];
+  const b = state.decor.on ? null : botAt(x, y); cam.hover = b ? b.a.id : null; cv.style.cursor = state.decor.on ? "crosshair" : b ? "pointer" : "grab";
+});
+function endPtr(e){
+  const was = drag, [x, y] = local(e); ptrs.delete(e.pointerId); if (ptrs.size < 2) pinch = null;
+  if (was && ptrs.size === 0) { drag = null; cv.style.cursor = state.decor.on ? "crosshair" : "grab"; if (!was.moved && e.type === "pointerup") tap(x, y); }
+}
+cv.addEventListener("pointerup", endPtr); cv.addEventListener("pointercancel", endPtr);
+cv.addEventListener("pointerleave", () => { cam.hover = null; if (!state.decor.on) cam.tile = null; });
+cv.addEventListener("wheel", e => { if (!e.ctrlKey && !e.metaKey) return; e.preventDefault(); const [x, y] = local(e); manual(); zoomAt(x, y, cam.ttw * Math.exp(-e.deltaY * .01)); }, {passive:false});
+function tap(x, y){
+  if (state.decor.on) { const g = toGrid(x, y); decorTap(Math.floor(g[0]), Math.floor(g[1])); return; }
+  const b = botAt(x, y);
+  if (b) { b.hop = lastT; if (!b.moving) b.face = [0, 1]; sfx("tap"); openPop(b.a.id); } else closePop();
+}
+function selectRoom(id){ fitRoom(id, false); cam.pauseUntil = performance.now() + 15000; markRoom(); }
+function markRoom(){ for (const btn of document.querySelectorAll("#rooms button")) btn.setAttribute("aria-selected", String(btn.dataset.room === cam.room)); }
+
+/* ============ 5. INTERFACCIA ============ */
+const $ = id => document.getElementById(id);
+const fmtDate = ms => { try { return new Date(ms).toLocaleString("it-IT", {day:"2-digit", month:"short", hour:"2-digit", minute:"2-digit"}); } catch (e) { return ""; } };
+const TAG = {attesa:["in coda", ""], lavoro:["al lavoro", "work"], fatto:["fatto", "ok"], errore:["fermo", "err"]};
+
+function stepHtml(st, i, opts){
+  const a = BY[st.agente], tg = TAG[st.stato] || TAG.attesa;
+  const right = opts.remove ? `<button class="x" type="button" data-act="rm" data-i="${i}" aria-label="Togli ${esc(a.nome)} dal piano" title="Togli dal piano">×</button>` : `<span class="tag ${tg[1]}">${tg[0]}</span>`;
+  const out = st.output ? `<details class="out" ${opts.open === i ? "open" : ""}><summary>${st.stato === "lavoro" ? "Sta scrivendo" : "Leggi il lavoro di " + esc(a.nome)}</summary><div class="md" id="${opts.prefix || "out"}-${i}">${md(st.output)}</div>${st.tronco ? '<p class="note" style="padding:0 12px 10px">Il testo è stato tagliato perché troppo lungo.</p>' : ""}</details>`
+    : st.stato === "lavoro" ? `<details class="out" open><summary>Sta scrivendo</summary><div class="md" id="out-${i}"><p class="note thinking">${esc(a.nome)} sta pensando</p></div></details>` : "";
+  return `<li class="step"><div class="step-h"><i class="dot" style="background:${a.colore}"></i><div class="grow"><b>${i + 1}. ${esc(a.nome)}</b><span>${esc(st.compito)}</span></div>${right}</div>${out}</li>`;
+}
+function renderConsole(){
+  const el = $("consoleBody"), j = state.job, ask = $("ask"), btn = $("askBtn");
+  const ready = !!state.sample, active = j && j.stato !== "fatto" && j.stato !== "fallito";
+  ask.disabled = btn.disabled = !ready || !!active || !!state.night;
+  const nb = $("nightBtn"); nb.textContent = state.night ? "Buongiorno" : "Buonanotte"; nb.disabled = !state.night && !!active; nb.classList.toggle("primary", !!state.night);
+  let h = "";
+  if (!j) {
+    const dr = state.dreams, dreams = dr && dr.sogni.length ? `<p class="note">Sogni della notte del ${fmtDate(dr.creato)}. Apri un sogno per leggere come realizzarlo.</p>` + dr.sogni.map((d, i) => `<details class="dream"><summary><i class="dot" style="background:${BY[d.agente].colore};margin:0"></i><b>${esc(d.titolo)}</b><small>${esc(BY[d.agente].nome)}</small></summary><div class="inner"><div class="md">${md(d.sogno + "\n\nCome realizzarla:\n" + d.come.map((x, k) => (k + 1) + ". " + x).join("\n"))}</div><div class="acts"><button class="btn small primary" type="button" data-act="dream" data-i="${i}" ${ready ? "" : "disabled"}>Dai vita a questo sogno</button></div></div></details>`).join("") : "";
+    if (state.night) h = `<p class="say">La squadra dorme. ${state.nightBusy ? "" : dr && dr.nuovi ? `Hanno sognato ${dr.sogni.length} idee: premi Buongiorno per sentirle.` : ""}</p>` + (state.nightBusy ? '<p class="note thinking">Stanno sognando idee per le tue ambizioni</p><p class="note">Ci vuole circa un minuto. Tieni la pagina aperta finché non hanno finito.</p>' : "") + (state.dreamNote ? `<p class="note">${esc(state.dreamNote)}</p>` : "");
+    else h = `<p class="say">Buongiorno. Dimmi cosa ti serve: porto la richiesta al Capo, lui sceglie gli agenti e tu confermi prima che partano.</p>` + (state.dreamNote ? `<p class="note">${esc(state.dreamNote)}</p>` : "") + dreams + `
+      <div class="examples" aria-label="Esempi">
+      <button type="button" data-act="ex">Fammi un piano di studio per la patente per questa settimana</button>
+      <button type="button" data-act="ex">3 idee per un video POV su TikTok, con hook e script</button>
+      <button type="button" data-act="ex">Controlla i miei obiettivi e dimmi su cosa puntare questo mese</button></div>`;
+    if (state.sample === undefined) h += `<p class="note thinking">Sto svegliando gli agenti</p>`;
+  } else {
+    h = `<div class="req"><small>La tua richiesta</small>${esc(j.richiesta)}</div>`;
+    if (j.stato === "pianifica") h += `<p class="note thinking">Il Capo sta preparando il piano</p><div class="acts"><button class="btn" type="button" data-act="cancel">Annulla</button></div>`;
+    if (j.stato === "fallito") h += `<p class="note err">${esc(j.errore)}</p><div class="acts"><button class="btn primary" type="button" data-act="new">Nuova richiesta</button></div>`;
+    if (j.stato === "attesa") h += `${j.nota ? `<p class="say"><b>Capo:</b> ${esc(j.nota)}</p>` : ""}<p class="note">Questo è il piano. Puoi togliere un passo con la ×. Non parte nessuno finché non confermi.</p>
+      <ol class="steps">${j.piano.map((s, i) => stepHtml(s, i, {remove:j.piano.length > 1})).join("")}</ol>
+      <div class="acts"><button class="btn primary" type="button" data-act="go">Conferma e parti</button><button class="btn" type="button" data-act="cancel">Annulla</button></div>`;
+    if (j.stato === "lavoro") { const cur = j.piano.findIndex(s => s.stato === "lavoro");
+      h += `<ol class="steps">${j.piano.map((s, i) => stepHtml(s, i, {open:cur})).join("")}</ol>${cur < 0 ? '<p class="note thinking">Il Maggiordomo prepara il riassunto</p>' : ""}<div class="acts"><button class="btn" type="button" data-act="stop">Ferma</button></div>`; }
+    if (j.stato === "pausa") h += `<ol class="steps">${j.piano.map((s, i) => stepHtml(s, i, {})).join("")}</ol><p class="note err">${esc(j.errore)}</p>
+      <div class="acts"><button class="btn primary" type="button" data-act="go">Riprendi</button><button class="btn" type="button" data-act="cancel">Chiudi</button></div>`;
+    if (j.stato === "fatto") h += `<div class="final"><small>Riassunto del Maggiordomo</small><div class="md">${md(j.riassunto)}</div></div>
+      <ol class="steps">${j.piano.map((s, i) => stepHtml(s, i, {})).join("")}</ol>
+      ${state.db ? (state.saveFail ? '<p class="note err">Non sono riuscito a salvare questo lavoro in archivio.</p>' : '<p class="note">Salvato in archivio.</p>') : '<p class="note">Archivio non disponibile: questo lavoro sparisce se chiudi la pagina.</p>'}
+      <div class="acts"><button class="btn primary" type="button" data-act="new">Nuova richiesta</button></div>`;
+  }
+  el.innerHTML = h;
+  const busy = AGENTS.filter(a => ["work", "walk"].includes(state.status[a.id].kind)).length;
+  $("chip").classList.toggle("busy", busy > 0);
+  $("chipText").textContent = busy ? `${busy} al lavoro · ${AGENTS.length - busy} alla scrivania` : `${AGENTS.length} agenti · alla scrivania`;
+}
+$("consoleBody").addEventListener("click", e => {
+  const b = e.target.closest("[data-act]"); if (!b) return; const act = b.dataset.act;
+  if (act === "ex") { $("ask").value = b.textContent; $("ask").focus(); }
+  if (act === "rm") removeStep(+b.dataset.i);
+  if (act === "dream") realizeDream(+b.dataset.i);
+  if (act === "go") runJob();
+  if (act === "cancel") cancelJob();
+  if (act === "stop") stopJob();
+  if (act === "new") { state.job = null; state.saveFail = false; renderConsole(); $("ask").focus(); }
+});
+function sendAsk(){ const v = $("ask").value.trim(); if (!v || !state.sample || state.night || $("askBtn").disabled) return; $("ask").value = ""; submit(v); }
+$("askForm").addEventListener("submit", e => { e.preventDefault(); sendAsk(); });
+$("ask").addEventListener("keydown", e => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); sendAsk(); } });
+
+function renderRoster(){
+  $("roster").innerHTML = ROOMS.map(r => `<div class="card group"><h3>${esc(r.nome)}</h3>${AGENTS.filter(a => a.stanza === r.id).map(a =>
+    `<button class="row" type="button" data-agent="${a.id}" id="row-${a.id}" title="${esc(a.ruolo)}"><i class="dot" style="background:${a.colore}"></i><b>${esc(a.nome)}</b><span></span></button>`).join("")}</div>`).join("");
+  for (const a of AGENTS) rowStatus(a.id);
+}
+function rowStatus(id){ const el = $("row-" + id); if (!el) return; const s = state.status[id]; el.className = "row " + (s.kind === "work" || s.kind === "walk" ? "work" : s.kind === "err" ? "err" : ""); el.lastElementChild.textContent = s.text; }
+$("roster").addEventListener("click", e => { const b = e.target.closest("[data-agent]"); if (b) openChat(b.dataset.agent); });
+
+$("rooms").innerHTML = [{id:"near", breve:"Da vicino"}, {id:"all", breve:"Tutto"}, ...ROOMS].map(r => `<button type="button" role="tab" data-room="${r.id}" aria-selected="${r.id === "near"}">${esc(r.breve)}</button>`).join("");
+$("rooms").addEventListener("click", e => { const b = e.target.closest("[data-room]"); if (b) selectRoom(b.dataset.room); });
+
+function renderArchive(){
+  const el = $("arch");
+  if (!state.db) { el.innerHTML = '<div class="empty">L\'archivio non è disponibile in questa vista. I lavori funzionano ma non vengono salvati.</div>'; return; }
+  if (!state.archive.length) { el.innerHTML = `<div class="empty">${state.archLoaded ? "Ancora nessun lavoro. Il primo che confermi comparirà qui." : "Sto aprendo l'archivio…"}</div>`; return; }
+  const open = new Set([...el.querySelectorAll("details[open][data-id]")].map(d => d.dataset.id));
+  el.innerHTML = state.archive.map(j => {
+    const stato = j.stato === "fatto" ? "" : j.tipo === "chat" ? "" : ' <span class="tag err">non finito</span>';
+    const body = j.tipo === "chat"
+      ? (j.piano || []).map(p => `<div class="md" style="padding:0"><p><b>${p.stato === "me" ? "Tu" : esc((BY[p.agente] || {}).nome || "Agente")}:</b></p>${md(p.output)}</div>`).join("")
+      : `${j.riassunto ? `<div class="final"><small>Riassunto</small><div class="md">${md(j.riassunto)}</div></div>` : ""}<ol class="steps">${(j.piano || []).filter(p => BY[p.agente]).map((s, i) => stepHtml(s, i, {prefix:"a-" + j.id})).join("")}</ol>`;
+    return `<details data-id="${esc(j.id)}" ${open.has(j.id) ? "open" : ""}><summary><b>${esc(j.richiesta || "Senza titolo")}</b>${stato}<time>${fmtDate(j.creato)}</time></summary><div class="inner">${body}
+      <div class="acts">${j.tipo !== "chat" && j.stato !== "fatto" ? `<button class="btn small" type="button" data-arch="resume" data-id="${esc(j.id)}">Riprendi</button>` : ""}<button class="btn small" type="button" data-arch="del" data-id="${esc(j.id)}">Elimina</button></div></div></details>`;
+  }).join("");
+}
+$("arch").addEventListener("click", async e => {
+  const b = e.target.closest("[data-arch]"); if (!b) return; const j = state.archive.find(x => x.id === b.dataset.id); if (!j) return;
+  if (b.dataset.arch === "del") {
+    if (b.dataset.sure !== "1") { b.dataset.sure = "1"; b.textContent = "Sicuro? Tocca ancora"; return; }
+    b.disabled = true; try { await state.db.collection("lavori").doc(j.id).delete(); } catch (err) { b.disabled = false; b.textContent = "Non riuscito, riprova"; }
+  }
+  if (b.dataset.arch === "resume") {
+    if (state.job && state.job.stato !== "fatto" && state.job.stato !== "fallito") return;
+    state.job = {id:j.id, richiesta:j.richiesta, nota:j.nota, creato:j.creato, stato:"pausa", errore:"Lavoro ripreso dall'archivio. Premi Riprendi per continuare da dove si era fermato.",
+      piano:j.piano.filter(p => BY[p.agente]).map(p => ({agente:p.agente, compito:p.compito, stato:p.stato === "fatto" ? "fatto" : "attesa", output:p.stato === "fatto" ? p.output : ""}))};
+    renderConsole(); $("consoleBody").scrollIntoView({behavior:reduce.matches ? "auto" : "smooth", block:"center"});
+  }
+});
+
+$("ctxSave").addEventListener("click", async () => {
+  const note = $("ctxNote"); state.context = $("ctx").value;
+  if (!state.db) { note.textContent = "Vale per questa visita, ma non posso salvarlo."; return; }
+  $("ctxSave").disabled = true; note.textContent = "Salvo…";
+  try { await state.db.doc("contesto/principale").set({testo:state.context.slice(0, 20000), aggiornato:Date.now()}); note.textContent = "Salvato. Gli agenti lo leggeranno dal prossimo lavoro."; }
+  catch (e) { note.textContent = "Non sono riuscito a salvare. Riprova tra poco."; }
+  $("ctxSave").disabled = false;
+});
+
+/* ---- chat diretta con un agente ---- */
+function openChat(id){
+  const a = BY[id]; if (!a) return;
+  if (!state.chat || state.chat.agent !== id) state.chat = {agent:id, turns:[], busy:false, ctl:null, saved:false};
+  $("chatAv").style.background = a.colore; $("chatAv").textContent = a.nome[0];
+  $("chatName").textContent = a.nome; $("chatRole").textContent = a.ruolo;
+  $("chat").hidden = false; renderChat(); if (state.sample) $("chatIn").focus();
+}
+function closeChat(){ $("chat").hidden = true; }
+function renderChat(){
+  const c = state.chat, a = BY[c.agent], log = $("chatLog");
+  log.innerHTML = c.turns.length ? c.turns.map((t, i) => t.role === "user" ? `<div class="msg me">${esc(t.content)}</div>` : `<div class="msg ai"><div class="md" id="cm-${i}">${t.content ? md(t.content) : `<p class="note thinking">${esc(a.nome)} sta pensando</p>`}</div></div>`).join("")
+    : `<p class="note">${state.sample ? `Stai parlando solo con ${esc(a.nome)}, senza passare dal Capo.` : "Gli agenti non possono rispondere in questa vista."}</p>`;
+  log.scrollTop = log.scrollHeight;
+  $("chatIn").disabled = $("chatSend").disabled = !state.sample || c.busy;
+  $("chatPhoto").hidden = !state.imgLimit || c.busy; $("chatPhoto").textContent = c.pending && c.pending.length ? `${c.pending.length} foto pronte` : "Allega foto";
+  $("chatStop").hidden = !c.busy; $("chatSave").hidden = !state.db || c.turns.length < 2 || c.busy; $("chatSave").disabled = c.saved;
+  $("chatSave").textContent = c.saved ? "Salvata in archivio" : "Salva in archivio";
+}
+async function sendChat(){
+  const c = state.chat, a = BY[c.agent], imgs = (c.pending || []).slice(); let v = $("chatIn").value.trim(); if (!v && imgs.length) v = "Guarda queste foto e dimmi cosa ne pensi."; if (!v || c.busy || !state.sample) return;
+  c.pending = []; if (imgs.length) v += `\n[${imgs.length} foto allegat${imgs.length === 1 ? "a" : "e"}]`;
+  $("chatIn").value = ""; $("chatNote").textContent = ""; c.saved = false;
+  c.turns.push({role:"user", content:v}); const reply = {role:"assistant", content:""}; c.turns.push(reply);
+  c.busy = true; c.ctl = new AbortController(); renderChat();
+  const before = state.status[a.id]; setStatus(a.id, "Parla con te", "work");
+  const rules = `${a.sys}\n${BASE}\nSei in una chat diretta dentro una pagina: non puoi agire su PC, telefono, mail o calendario e non puoi cercare su internet. Se serve un'azione, scrivi il testo o il comando pronto.\n\nCOSA SAPPIAMO DELLA PERSONA:\n${ctxBlock()}`;
+  const idx = c.turns.length - 1, hist = c.turns.slice(0, -1).slice(-16);
+  try {
+    const r = await state.sample([{role:"user", content:rules}, ...hist], {cache:false, signal:c.ctl.signal, ...(imgs.length ? {images:imgs} : {}), onText:u => { reply.content = u.text; bots[a.id].live = tail(u.text); const el = $("cm-" + idx); if (el && state.chat === c) { el.innerHTML = md(u.text); $("chatLog").scrollTop = $("chatLog").scrollHeight; } }});
+    reply.content = r.text;
+  } catch (e) {
+    reply.content = e.text || ""; if (!reply.content) c.turns.pop();
+    if (e.code !== "cancelled") $("chatNote").textContent = errMsg(e).replace("premi Riprendi", "riprova").replace("Premi Riprendi per riprovare.", "Riprova.");
+  }
+  c.busy = false; if (state.status[a.id].text === "Parla con te") setStatus(a.id, before.kind === "idle" ? "Alla scrivania" : before.text, before.kind);
+  if (state.chat === c) renderChat();
+}
+$("chatForm").addEventListener("submit", e => { e.preventDefault(); sendChat(); });
+$("chatIn").addEventListener("keydown", e => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); sendChat(); } });
+$("chatClose").addEventListener("click", closeChat);
+$("chatPhoto").addEventListener("click", () => $("chatFile").click());
+$("chatFile").addEventListener("change", e => { const c = state.chat; if (!c) return; const max = (state.imgLimit && state.imgLimit.maxCount) || 1, all = [...(c.pending || []), ...e.target.files]; e.target.value = ""; c.pending = all.slice(0, max); $("chatNote").textContent = all.length > max ? `Posso guardare al massimo ${max} foto per volta.` : "Le foto partono con il prossimo messaggio."; renderChat(); });
+$("chatStop").addEventListener("click", () => { if (state.chat && state.chat.ctl) state.chat.ctl.abort(); });
+$("chat").addEventListener("click", e => { if (e.target === $("chat")) closeChat(); });
+document.addEventListener("keydown", e => { if (e.key !== "Escape") return; if (!$("chat").hidden) { e.preventDefault(); closeChat(); } else if (state.pop) { e.preventDefault(); closePop(); } else if (state.decor.on) { e.preventDefault(); state.decor.on = false; renderDecor(); } });
+$("chatSave").addEventListener("click", async () => {
+  const c = state.chat; if (!c || !state.db || c.saved) return;
+  const first = c.turns.find(t => t.role === "user");
+  const job = {id:c.id || (c.id = newId()), tipo:"chat", richiesta:BY[c.agent].nome + ": " + (first ? first.content.slice(0, 120) : ""), stato:"fatto", creato:c.creato || (c.creato = Date.now()),
+    piano:c.turns.filter(t => t.content).map(t => ({agente:c.agent, compito:"", stato:t.role === "user" ? "me" : "fatto", output:t.content}))};
+  state.saveFail = false; await saveJob(job); c.saved = !state.saveFail; $("chatNote").textContent = state.saveFail ? "Non sono riuscito a salvare." : ""; renderChat();
+});
+
+/* ---- collegamenti motore → interfaccia ---- */
+hooks.render = renderConsole;
+hooks.status = id => { rowStatus(id); recall(id); };
+const tail = s => String(s).replace(/[#*`|>_-]+/g, " ").replace(/\s+/g, " ").trim().slice(-34);
+hooks.stream = i => { const sj = state.job.piano[i]; bots[sj.agente].live = tail(sj.output); const el = $("out-" + i); if (el) { el.innerHTML = md(state.job.piano[i].output); const box = $("consoleBody"); if (box.scrollHeight - box.scrollTop - box.clientHeight < 160) box.scrollTop = box.scrollHeight; } };
+hooks.walk = walk;
+hooks.room = () => {};
+hooks.log = (id, text) => { state.feed.unshift({t:Date.now(), id, text}); if (state.feed.length > 60) state.feed.pop(); renderFeed(true); };
+
+/* ---- suoni (si possono spegnere) ---- */
+const pref = (k, def) => { try { const v = localStorage.getItem("agenzia." + k); return v === null ? def : v === "1"; } catch (e) { return def; } };
+const setPref = (k, v) => { try { localStorage.setItem("agenzia." + k, v ? "1" : "0"); } catch (e) {} };
+state.sound = pref("suoni", true); state.voice = pref("voce", true);
+let actx = null;
+function tone(f, dur, type, vol, when){
+  try {
+    if (!actx) { const AC = window.AudioContext || window.webkitAudioContext; if (!AC) return; actx = new AC(); }
+    if (actx.state === "suspended") actx.resume();
+    const t0 = actx.currentTime + (when || 0), o = actx.createOscillator(), g = actx.createGain();
+    o.type = type || "sine"; o.frequency.setValueAtTime(f, t0); g.gain.setValueAtTime(0, t0); g.gain.linearRampToValueAtTime(vol || .05, t0 + .012); g.gain.exponentialRampToValueAtTime(.0001, t0 + dur);
+    o.connect(g); g.connect(actx.destination); o.start(t0); o.stop(t0 + dur + .02);
+  } catch (e) {}
+}
+const SOUNDS = {
+  tap:() => tone(740, .07, "triangle", .04), place:() => { tone(300, .09, "sine", .07); tone(450, .12, "sine", .05, .07); }, remove:() => tone(240, .12, "triangle", .05),
+  plan:() => { tone(523, .12, "sine", .05); tone(659, .16, "sine", .05, .11); }, hand:() => tone(587, .06, "triangle", .03), done:() => { tone(659, .1, "sine", .05); tone(880, .2, "sine", .05, .09); },
+  final:() => [523, 659, 784, 1047].forEach((f, i) => tone(f, .22, "sine", .05, i * .1)), err:() => { tone(220, .18, "triangle", .05); tone(175, .25, "triangle", .05, .15); },
+  night:() => [784, 659, 523, 392].forEach((f, i) => tone(f, .5, "sine", .04, i * .28)), day:() => [392, 523, 659, 784].forEach((f, i) => tone(f, .3, "sine", .045, i * .14)),
+};
+function sfx(n){ if (state.sound && SOUNDS[n]) SOUNDS[n](); }
+hooks.sound = sfx;
+function say(text){
+  if (!state.voice || !state.tts || !text) return;
+  const plain = String(text).replace(/[#*`|>_]+/g, " ").replace(/\s+/g, " ").trim().slice(0, 900); if (!plain) return;
+  Promise.resolve().then(() => state.tts.speak(plain, {voice:"rounded", language:"it"})).catch(e => { if (e && (e.code === "not_granted" || e.code === "unavailable")) { state.tts = null; syncToggles(); } });
+}
+hooks.say = say;
+hooks.wake = id => { bots[id].hop = lastT + Math.random() * .5; };
+function syncToggles(){
+  $("sndBtn").setAttribute("aria-pressed", String(state.sound)); $("sndBtn").textContent = state.sound ? "Suoni: sì" : "Suoni: no";
+  $("voiceBtn").hidden = !state.tts; $("voiceBtn").setAttribute("aria-pressed", String(state.voice)); $("voiceBtn").textContent = state.voice ? "Voce: sì" : "Voce: no";
+  if (!state.tts) $("voiceStop").hidden = true;
+}
+$("sndBtn").addEventListener("click", () => { state.sound = !state.sound; setPref("suoni", state.sound); syncToggles(); sfx("tap"); });
+$("voiceBtn").addEventListener("click", () => { state.voice = !state.voice; setPref("voce", state.voice); syncToggles(); if (state.voice) say("Voce accesa. Sono il Maggiordomo."); else if (state.tts) try { state.tts.stop(); } catch (e) {} });
+$("voiceStop").addEventListener("click", () => { if (state.tts) try { state.tts.stop(); } catch (e) {} });
+$("nightBtn").addEventListener("click", () => { closePop(); if (state.night) goodmorning(); else { state.decor.on = false; renderDecor(); goodnight(); } });
+
+/* ---- diretta ---- */
+function renderFeed(fresh){
+  $("feedList").innerHTML = state.feed.length ? state.feed.map((e, i) => `<li class="${fresh && i === 0 ? "new" : ""}"><time>${new Date(e.t).toLocaleTimeString("it-IT")}</time><i class="dot" style="background:${BY[e.id].colore}"></i><span><b>${esc(BY[e.id].nome)}</b> ${esc(e.text)}</span></li>`).join("")
+    : '<li class="none">Qui vedi in diretta cosa fanno gli agenti. Trascina il palazzo per spostarti, usa + e − per lo zoom, tocca un agente per parlargli.</li>';
+}
+/* ---- scheda dell'agente toccato ---- */
+function openPop(id){ state.pop = id; const a = BY[id]; $("popName").textContent = a.nome; $("popRole").textContent = a.ruolo; $("pop").hidden = false; const b = bots[id]; setTimeout(() => { if (!b.moving && b.x === a.seat[0] && b.y === a.seat[1]) b.face = a.face; }, 1600); }
+function closePop(){ state.pop = null; $("pop").hidden = true; }
+function placePop(){
+  if (!state.pop) return; const b = bots[state.pop], el = $("pop"), st = state.status[state.pop];
+  const ph = el.offsetHeight || 150, below = b.sy + cam.tw * .62, dock = cam.H < 440 || cam.W < 420, above = below + ph + 6 > cam.H;
+  el.classList.toggle("dock", dock);
+  if (!dock) { el.style.left = Math.max(123, Math.min(cam.W - 123, b.sx)) + "px"; el.style.top = (above ? Math.max(ph + 6, b.ly - 50) : below) + "px"; el.dataset.above = above ? "1" : ""; }
+  const now = st.kind === "work" && b.live ? "✎ " + b.live : st.text; if ($("popNow").textContent !== now) $("popNow").textContent = now;
+  const f = cam.follow === state.pop ? "Smetti di seguire" : "Segui"; if ($("popFollow").textContent !== f) $("popFollow").textContent = f;
+}
+$("popTalk").addEventListener("click", () => { const id = state.pop; closePop(); openChat(id); });
+$("popFollow").addEventListener("click", () => { cam.follow = cam.follow === state.pop ? null : state.pop; cam.room = null; markRoom(); });
+$("zIn").addEventListener("click", () => { manual(); zoomAt(cam.W / 2, cam.H * .56, cam.ttw * 1.3); });
+$("zOut").addEventListener("click", () => { manual(); zoomAt(cam.W / 2, cam.H * .56, cam.ttw / 1.3); });
+$("regia").addEventListener("click", () => { cam.auto = !cam.auto; cam.pauseUntil = 0; $("regia").setAttribute("aria-pressed", String(cam.auto)); });
+
+/* ---- arredamento ---- */
+function decorType(){ const d = state.decor; if (d.item === "closet") { const o = state.closet[d.ci]; return o ? o.t : null; } return FURN[d.item] ? d.item : null; }
+const furnName = o => o.t === "img" ? ((state.imgs[o.id] || {}).nome || "Immagine") : FURN[o.t].nome;
+function renderDecor(){
+  const d = state.decor, bar = $("decorbar"); bar.hidden = !d.on; $("arreda").setAttribute("aria-pressed", String(d.on));
+  if (!d.on) return;
+  const ids = Object.keys(state.imgs);
+  bar.innerHTML = '<div class="chips">' + Object.entries(FURN).filter(([, f]) => !f.hidden).map(([k, f]) => `<button type="button" data-item="${k}" aria-pressed="${d.item === k}">${f.nome}</button>`).join("")
+    + ids.map(id => `<button type="button" class="thumb" data-img="${id}" aria-pressed="${d.item === "img" && d.img === id}" aria-label="La tua immagine ${esc(state.imgs[id].nome)}" title="${esc(state.imgs[id].nome)}"><img src="${state.imgs[id].data}" alt=""></button>`).join("")
+    + `<button type="button" data-do="upload" ${d.busy ? "disabled" : ""}>${d.busy ? "Carico…" : "+ Carica immagine"}</button></div>`
+    + `<div class="chips"><button type="button" data-item="via" aria-pressed="${d.item === "via"}">Metti nello sgabuzzino</button><button type="button" data-item="togli" aria-pressed="${d.item === "togli"}">Butta via</button>`
+    + (state.closet.length ? state.closet.map((o, i) => o.t === "img" && state.imgs[o.id] ? `<button type="button" class="thumb" data-closet="${i}" aria-pressed="${d.item === "closet" && d.ci === i}" aria-label="Dallo sgabuzzino: ${esc(furnName(o))}"><img src="${state.imgs[o.id].data}" alt=""></button>` : `<button type="button" data-closet="${i}" aria-pressed="${d.item === "closet" && d.ci === i}">↩ ${esc(furnName(o))}</button>`).join("") : '<span class="note" style="align-self:center;white-space:nowrap">Lo sgabuzzino è vuoto.</span>') + "</div>"
+    + `<div class="row2"><span class="note" id="decorMsg" aria-live="polite">${esc(d.msg || "Scegli un mobile e tocca il pavimento dove lo vuoi. Nello sgabuzzino metti da parte le cose e le riprendi quando vuoi.")}</span>`
+    + (d.item === "img" ? [["Piccolo", 1], ["Medio", 1.5], ["Grande", 2.3]].map(([n, v]) => `<button type="button" class="btn small" data-size="${v}" aria-pressed="${d.size === v}">${n}</button>`).join("") + '<button type="button" class="btn small" data-do="delimg">Elimina immagine</button>' : "")
+    + `<button type="button" class="btn small" data-do="cut" aria-pressed="${d.cut}" title="Quando carichi una foto con sfondo bianco o di un solo colore, lo tolgo">Togli sfondo: ${d.cut ? "sì" : "no"}</button><button type="button" class="btn small" data-do="reset">Come all'inizio</button><button type="button" class="btn small primary" data-do="fine">Fine</button></div>`;
+}
+$("arreda").addEventListener("click", () => { state.decor.on = !state.decor.on; state.decor.msg = ""; closePop(); cam.follow = null; renderDecor(); });
+$("decorbar").addEventListener("click", async e => {
+  const b = e.target.closest("button"); if (!b) return; const d = state.decor, act = b.dataset.do;
+  if (b.dataset.item) { d.item = b.dataset.item; d.msg = ""; }
+  if (b.dataset.img) { d.item = "img"; d.img = b.dataset.img; d.msg = "Tocca il pavimento dove vuoi metterla."; }
+  if (b.dataset.closet) { d.item = "closet"; d.ci = Number(b.dataset.closet); d.msg = "Tocca il pavimento dove vuoi rimetterlo."; }
+  if (b.dataset.size) d.size = Number(b.dataset.size);
+  if (act === "fine") d.on = false;
+  if (act === "cut") d.cut = !d.cut;
+  if (act === "upload") { $("imgFile").click(); return; }
+  if (act === "reset") { state.furn = DEFAULT_FURN.map(o => Object.assign({}, o)); d.msg = "Arredamento rimesso come all'inizio. Le tue immagini restano nella lista."; furnChanged(); }
+  if (act === "delimg") {
+    if (b.dataset.sure !== "1") { b.dataset.sure = "1"; b.textContent = "Sicuro? Tocca ancora"; return; }
+    const id = d.img; delete state.imgs[id]; state.furn = state.furn.filter(o => !(o.t === "img" && o.id === id)); state.closet = state.closet.filter(o => !(o.t === "img" && o.id === id)); d.item = "pianta"; d.img = null; d.msg = "Immagine eliminata."; furnChanged();
+    if (state.db) try { await state.db.collection("immagini").doc(id).delete(); } catch (err) {}
+  }
+  renderDecor();
+});
+$("imgFile").addEventListener("change", async e => { const f = e.target.files && e.target.files[0]; e.target.value = ""; if (f) await importImage(f); });
+// Toglie lo sfondo se i quattro angoli hanno lo stesso colore (tipico delle foto di prodotti)
+function removeBg(c2, w, h){
+  const im = c2.getImageData(0, 0, w, h), px = im.data, at = (x, y) => (y * w + x) * 4, cs = [at(0, 0), at(w - 1, 0), at(0, h - 1), at(w - 1, h - 1)];
+  if (cs.some(i => px[i + 3] < 250)) return false;
+  const ref = [0, 1, 2].map(k => cs.reduce((a, i) => a + px[i + k], 0) / 4), far = i => Math.abs(px[i] - ref[0]) + Math.abs(px[i + 1] - ref[1]) + Math.abs(px[i + 2] - ref[2]);
+  if (cs.some(i => far(i) > 36)) return false;
+  const seen = new Uint8Array(w * h), st = [0, w - 1, (h - 1) * w, h * w - 1];
+  while (st.length) { const n = st.pop(); if (seen[n]) continue; seen[n] = 1; const i = n * 4, f = far(i); if (f > 70) continue; px[i + 3] = f < 44 ? 0 : Math.round((f - 44) / 26 * 255); const x = n % w, y = (n - x) / w; if (f < 44) { if (x > 0) st.push(n - 1); if (x < w - 1) st.push(n + 1); if (y > 0) st.push(n - w); if (y < h - 1) st.push(n + w); } }
+  c2.putImageData(im, 0, 0); return true;
+}
+function addImg(id, rec){ const el = new Image(); el.src = rec.data; state.imgs[id] = {nome:String(rec.nome || "immagine"), data:rec.data, el}; return el; }
+async function importImage(file){
+  const d = state.decor;
+  if (Object.keys(state.imgs).length >= 24) { d.msg = "Hai già 24 immagini. Eliminane una prima di caricarne un'altra."; renderDecor(); return; }
+  if (!/^image\//.test(file.type || "")) { d.msg = "Quel file non è un'immagine. Usa una foto JPG, PNG o WebP."; renderDecor(); return; }
+  d.busy = true; d.msg = "Preparo l'immagine…"; renderDecor();
+  try {
+    const src = await new Promise((res, rej) => { const u = URL.createObjectURL(file), im = new Image(); im.onload = () => { URL.revokeObjectURL(u); res(im); }; im.onerror = () => { URL.revokeObjectURL(u); rej(new Error("img")); }; im.src = u; });
+    let data = "", cut = false;
+    for (const side of [640, 480, 320, 200]) {
+      const k = Math.min(1, side / Math.max(src.naturalWidth, src.naturalHeight)), w = Math.max(1, Math.round(src.naturalWidth * k)), h = Math.max(1, Math.round(src.naturalHeight * k));
+      const c = document.createElement("canvas"); c.width = w; c.height = h; const c2 = c.getContext("2d", {willReadFrequently:true}); c2.drawImage(src, 0, 0, w, h);
+      cut = d.cut && removeBg(c2, w, h);
+      data = c.toDataURL("image/webp", .88); if (data.indexOf("data:image/webp") !== 0) data = c.toDataURL("image/png");
+      if (data.length <= 235000) break;
+    }
+    if (data.length > 235000) throw new Error("big");
+    const id = "i" + Date.now().toString(36) + Math.random().toString(36).slice(2, 6), rec = {nome:(file.name || "immagine").replace(/\.[a-z0-9]+$/i, "").slice(0, 40), data, creato:Date.now()};
+    if (state.db) await state.db.collection("immagini").doc(id).set(rec);
+    addImg(id, rec); d.item = "img"; d.img = id;
+    d.msg = (cut ? "Caricata, sfondo tolto. " : d.cut ? "Caricata. Lo sfondo non era di un solo colore, quindi l'ho lasciato. " : "Caricata. ") + "Tocca il pavimento dove vuoi metterla." + (state.db ? "" : " In questa vista non posso salvarla.");
+  } catch (err) { d.msg = err && err.message === "big" ? "Questa immagine è troppo pesante anche rimpicciolita. Provane una più semplice." : "Non sono riuscito a leggere questa immagine. Prova con un JPG o un PNG."; }
+  d.busy = false; renderDecor();
+}
+function decorTap(gx, gy){
+  const d = state.decor;
+  if (d.item === "togli" || d.item === "via") {
+    const i = furnAt(gx, gy);
+    if (i < 0) d.msg = "Lì non c'è niente da prendere.";
+    else if (d.item === "via" && state.closet.length >= 60) d.msg = "Lo sgabuzzino è pieno (60 cose). Rimetti fuori o butta via qualcosa.";
+    else { const o = state.furn.splice(i, 1)[0]; if (d.item === "via") { state.closet.push(o.t === "img" ? {t:o.t, id:o.id, s:o.s} : {t:o.t}); d.msg = "Messo nello sgabuzzino: " + furnName(o) + "."; } else d.msg = "Buttato via: " + furnName(o) + "."; sfx("remove"); furnChanged(); }
+  } else {
+    const ty = decorType(); if (!ty) { d.msg = "Scegli prima un mobile."; renderDecor(); return; }
+    const src = d.item === "closet" ? state.closet[d.ci] : {id:d.img, s:d.size};
+    const why = whyNot(ty, gx, gy), o = ty === "img" ? {t:"img", x:gx, y:gy, id:src.id, s:src.s} : {t:ty, x:gx, y:gy};
+    if (why) d.msg = why;
+    else if (FURN[ty].block && Object.values(bots).some(b => cellsOf(o).some(c => c[0] === Math.round(b.x) && c[1] === Math.round(b.y)))) d.msg = "C'è un agente lì adesso. Riprova tra un attimo.";
+    else if (state.furn.length >= 80) d.msg = "Hai raggiunto il massimo di 80 mobili. Mettine uno nello sgabuzzino prima.";
+    else { state.furn.push(o); if (d.item === "closet") { state.closet.splice(d.ci, 1); d.item = "via"; d.msg = "Rimesso fuori: " + furnName(o) + "."; } else d.msg = "Aggiunto: " + furnName(o) + "."; sfx("place"); furnChanged(); }
+  }
+  renderDecor();
+}
+let furnTimer = null, furnBusy = false;
+function furnChanged(){
+  rebuildBlocked(); if (!state.db) return;
+  clearTimeout(furnTimer);
+  furnTimer = setTimeout(async function save(){
+    if (furnBusy) { furnTimer = setTimeout(save, 400); return; }
+    furnBusy = true;
+    try { await state.db.doc("arredo/principale").set({oggetti:state.furn.map(o => o.t === "img" ? {t:o.t, x:o.x, y:o.y, id:o.id, s:o.s} : {t:o.t, x:o.x, y:o.y}), sgabuzzino:state.closet.map(o => o.t === "img" ? {t:o.t, id:o.id, s:o.s} : {t:o.t}), aggiornato:Date.now()}); }
+    catch (e) { state.decor.msg = "Non sono riuscito a salvare l'arredamento. Riprova tra poco."; renderDecor(); }
+    furnBusy = false;
+  }, 700);
+}
+function loadFurn(list){
+  if (!Array.isArray(list)) return; const keep = state.furn; state.furn = []; rebuildBlocked();
+  for (const o of list.slice(0, 80)) { if (!o || !FURN[o.t] || !Number.isInteger(o.x) || !Number.isInteger(o.y)) continue; if (o.t === "img" && !state.imgs[o.id]) continue; if (!whyNot(o.t, o.x, o.y)) { state.furn.push(o.t === "img" ? {t:o.t, x:o.x, y:o.y, id:o.id, s:Math.max(.8, Math.min(3, Number(o.s) || 1.5))} : {t:o.t, x:o.x, y:o.y}); rebuildBlocked(); } }
+  if (!state.furn.length && list.length) state.furn = keep; rebuildBlocked();
+}
+function loadCloset(list){ if (!Array.isArray(list)) return; state.closet = list.slice(0, 60).filter(o => o && FURN[o.t] && (o.t !== "img" || state.imgs[o.id])).map(o => o.t === "img" ? {t:"img", id:o.id, s:Math.max(.8, Math.min(3, Number(o.s) || 1.5))} : {t:o.t}); }
+
+/* ---- avvio ---- */
+function boot(){
+  renderRoster(); renderConsole(); renderFeed(); renderDecor();
+  new ResizeObserver(resize).observe(cv.parentElement); resize(); startLoop();
+  setTimeout(stroll, 1500); setInterval(stroll, 3200);
+  const themeChange = () => { PAL = palette(); };
+  matchMedia("(prefers-color-scheme: dark)").addEventListener("change", themeChange);
+  new MutationObserver(themeChange).observe(document.documentElement, {attributes:true, attributeFilter:["data-theme"]});
+  if (document.fonts && document.fonts.ready) document.fonts.ready.then(() => {});
+
+  const use = name => (window.claude && typeof window.claude.use === "function") ? window.claude.use(name).catch(() => null) : Promise.resolve(null);
+  use("sample").then(s => {
+    state.sample = s || null;
+    if (!s) { const b = $("banner"); b.hidden = false; b.innerHTML = "<strong>Gli agenti qui non possono pensare.</strong> Apri questa pagina dentro Claude (app o sito) con il tuo account: lì funzionano. Il palazzo e l'archivio li vedi comunque."; }
+    renderConsole(); if (state.chat && !$("chat").hidden) renderChat();
+    if (s && s.limits) s.limits().then(l => { state.imgLimit = l && l.images ? l.images : null; if (state.chat && !$("chat").hidden) renderChat(); }).catch(() => {});
+  });
+  syncToggles();
+  use("tts").then(t => { state.tts = t || null; syncToggles(); if (t && t.onState) try { t.onState(ev => { $("voiceStop").hidden = !state.tts || ev.state === "idle"; }); } catch (e) {} });
+  use("db").then(db => {
+    state.db = db || null; renderArchive(); renderConsole();
+    if (!db) { $("ctxNote").textContent = "In questa vista non posso salvare il testo."; return; }
+    db.collection("immagini").limit(30).get().then(q => { for (const dc of q.docs) { const r = dc.data(); if (r && typeof r.data === "string" && r.data.indexOf("data:image/") === 0) addImg(dc.id, r); } }).catch(() => {})
+      .then(() => db.doc("arredo/principale").get()).then(snap => { if (snap.exists) { loadFurn(snap.data().oggetti); loadCloset(snap.data().sgabuzzino); } renderDecor(); }).catch(() => {});
+    db.doc("sogni/ultimo").get().then(snap => { if (snap.exists && !state.dreams) { const list = validDreams(snap.data()); if (list.length) { state.dreams = {creato:Number(snap.data().creato) || Date.now(), sogni:list, nuovi:false}; renderConsole(); } } }).catch(() => {});
+    db.doc("contesto/principale").get().then(snap => { if (snap.exists) { const t = String(snap.data().testo || ""); state.context = t; if (!$("ctx").value) $("ctx").value = t; } }).catch(() => {});
+    const slow = setTimeout(() => { if (!state.archLoaded) $("archNote").textContent = "L'archivio non risponde ancora. Riprovo da solo: non serve ricaricare."; }, 10000);
+    db.collection("lavori").orderBy("creato", "desc").limit(40).onSnapshot(snap => {
+      if (!snap.metadata.fromCache) { clearTimeout(slow); $("archNote").textContent = "I lavori finiti restano qui e li ritrovi da PC e da telefono."; }
+      state.archLoaded = true; state.archive = snap.docs.map(d => Object.assign({id:d.id}, d.data())); renderArchive();
+    }, () => { clearTimeout(slow); state.archLoaded = true; $("archNote").textContent = "Non riesco ad aprire l'archivio in questa vista."; renderArchive(); });
+  });
+}
+boot();
+</script>
+
+</body></html>

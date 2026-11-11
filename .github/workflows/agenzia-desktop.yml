@@ -1,0 +1,57 @@
+name: Agenzia desktop
+
+# Crea gli installer dell'app Agenzia (Windows, Mac, Linux).
+# Si avvia da solo quando cambia qualcosa in agenzia/, oppure a mano da
+# Actions → "Agenzia desktop" → "Run workflow". Gli installer si scaricano
+# dalla pagina della run, in fondo, alla voce "Artifacts".
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - "agenzia/**"
+      - ".github/workflows/agenzia-desktop.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: windows-latest
+            target: win
+            files: |
+              agenzia/dist/*.exe
+          - os: macos-latest
+            target: mac
+            files: |
+              agenzia/dist/*.dmg
+          - os: ubuntu-latest
+            target: linux
+            files: |
+              agenzia/dist/*.AppImage
+    runs-on: ${{ matrix.os }}
+    defaults:
+      run:
+        working-directory: agenzia
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: agenzia/package-lock.json
+      - run: npm ci
+      - run: npm test
+      - run: npm run dist:${{ matrix.target }}
+        env:
+          # Nessuna firma digitale: l'app è per uso personale.
+          CSC_IDENTITY_AUTO_DISCOVERY: "false"
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - uses: actions/upload-artifact@v4
+        with:
+          name: Agenzia-${{ matrix.target }}
+          path: ${{ matrix.files }}
+          if-no-files-found: error

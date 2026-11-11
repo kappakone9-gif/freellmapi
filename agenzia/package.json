@@ -1,0 +1,53 @@
+{
+  "name": "agenzia-desktop",
+  "productName": "Agenzia",
+  "version": "1.0.0",
+  "description": "L'Agenzia degli agenti come app desktop, con FreeLLMAPI come cervello",
+  "private": true,
+  "main": "src/main.cjs",
+  "scripts": {
+    "start": "electron .",
+    "importa": "node scripts/importa-artifact.mjs",
+    "test": "node --test test/shim.test.mjs",
+    "dist:win": "electron-builder --win --x64 --publish never",
+    "dist:mac": "electron-builder --mac --publish never",
+    "dist:linux": "electron-builder --linux --x64 --publish never"
+  },
+  "devDependencies": {
+    "electron": "^38.8.6",
+    "electron-builder": "^25.1.8"
+  },
+  "build": {
+    "appId": "it.agenzia.desktop",
+    "productName": "Agenzia",
+    "directories": { "output": "dist" },
+    "files": ["src/**/*", "app/**/*", "assets/**/*"],
+    "asar": true,
+    "publish": null,
+    "win": {
+      "icon": "assets/icon.png",
+      "target": [{ "target": "nsis", "arch": ["x64"] }, { "target": "portable", "arch": ["x64"] }]
+    },
+    "nsis": {
+      "artifactName": "Agenzia-Setup-${version}.${ext}",
+      "oneClick": true,
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true,
+      "shortcutName": "Agenzia",
+      "deleteAppDataOnUninstall": false
+    },
+    "portable": { "artifactName": "Agenzia-Portable-${version}.${ext}" },
+    "mac": {
+      "icon": "assets/icon.png",
+      "category": "public.app-category.productivity",
+      "artifactName": "Agenzia-${version}-${arch}.${ext}",
+      "target": [{ "target": "dmg", "arch": ["arm64", "x64"] }]
+    },
+    "linux": {
+      "icon": "assets/icon.png",
+      "category": "Office",
+      "artifactName": "Agenzia-${version}.${ext}",
+      "target": [{ "target": "AppImage", "arch": ["x64"] }]
+    }
+  }
+}

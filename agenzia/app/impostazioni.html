@@ -1,0 +1,88 @@
+<!doctype html>
+<html lang="it">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; style-src 'self' 'unsafe-inline'; script-src 'self' 'unsafe-inline'">
+<title>Impostazioni</title>
+<style>
+:root{--bg:#eef1f7;--surface:#fff;--ink:#151a2b;--muted:#566080;--line:#cdd4e3;--accent:#d9620b;--accent-ink:#fff;--ok:#1c8f59;--bad:#c9323f;color-scheme:light}
+@media (prefers-color-scheme:dark){:root{--bg:#0d111e;--surface:#161b2d;--ink:#eef1fa;--muted:#9ba5c2;--line:#2b3350;--accent:#ffa24a;--accent-ink:#1b1204;--ok:#4fd18f;--bad:#ff7a86;color-scheme:dark}}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.5 system-ui,-apple-system,"Segoe UI",sans-serif}
+main{max-width:520px;margin:0 auto;padding:20px 16px 32px;display:flex;flex-direction:column;gap:14px}
+h1{font-size:1.35rem;margin:0}
+p{margin:0;color:var(--muted);font-size:.9rem}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:14px;display:flex;flex-direction:column;gap:12px}
+label{display:flex;flex-direction:column;gap:4px;font-weight:600;font-size:.9rem}
+label small{font-weight:400;color:var(--muted)}
+input{font:inherit;color:inherit;background:var(--bg);border:1px solid var(--line);border-radius:10px;padding:9px 11px;min-height:42px}
+input:focus-visible,button:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+button{font:inherit;font-weight:600;border:1px solid var(--line);background:var(--surface);color:var(--ink);border-radius:10px;padding:9px 16px;min-height:42px;cursor:pointer}
+button.primary{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+.msg{font-size:.9rem;min-height:1.4em}
+.msg.ok{color:var(--ok)}.msg.bad{color:var(--bad)}
+ol{margin:0;padding-left:20px;color:var(--muted);font-size:.9rem}
+ol li{margin:4px 0}
+code{font-family:ui-monospace,Consolas,monospace;font-size:.85em}
+</style>
+</head>
+<body>
+<main>
+  <h1>Il cervello degli agenti</h1>
+  <p>Gli agenti pensano usando un'API di modelli linguistici. Di base l'app usa FreeLLMAPI acceso su questo computer, che smista le richieste tra modelli gratuiti.</p>
+
+  <form class="card" id="f">
+    <label>Indirizzo dell'API
+      <input id="baseUrl" type="url" required spellcheck="false" placeholder="http://127.0.0.1:31415/v1">
+      <small>Per FreeLLMAPI lascia <code>http://127.0.0.1:31415/v1</code>. Va bene qualsiasi API compatibile OpenAI.</small>
+    </label>
+    <label>Chiave API
+      <input id="apiKey" type="password" spellcheck="false" autocomplete="off" placeholder="freellmapi-…">
+      <small>In FreeLLMAPI è la "unified key": la copi dal menu dell'icona in alto (o nella barra delle applicazioni).</small>
+    </label>
+    <label>Modello
+      <input id="model" type="text" spellcheck="false" placeholder="auto">
+      <small>Con FreeLLMAPI scrivi <code>auto</code>: sceglie lui il modello migliore libero in quel momento.</small>
+    </label>
+    <label>Modello veloce (facoltativo)
+      <input id="quickModel" type="text" spellcheck="false" placeholder="uguale al modello">
+      <small>Usato dal Capo per i piani e dal Maggiordomo per i riassunti. Vuoto = uguale al modello sopra.</small>
+    </label>
+    <div class="row">
+      <button class="primary" type="submit">Salva</button>
+      <button type="button" id="test">Prova il collegamento</button>
+    </div>
+    <div class="msg" id="msg" role="status" aria-live="polite"></div>
+  </form>
+
+  <div class="card">
+    <b>Prima volta con FreeLLMAPI</b>
+    <ol>
+      <li>Installa e apri l'app FreeLLMAPI (compare un'icona vicino all'orologio).</li>
+      <li>Dal suo pannello aggiungi almeno una chiave gratuita di un provider (per esempio Groq o Google AI Studio).</li>
+      <li>Copia la unified key e incollala qui sopra, poi premi "Prova il collegamento".</li>
+    </ol>
+  </div>
+</main>
+<script>
+"use strict";
+const S = window.agenziaHost && window.agenziaHost.settings;
+const $ = id => document.getElementById(id);
+const fields = ["baseUrl", "apiKey", "model", "quickModel"];
+const read = () => Object.fromEntries(fields.map(k => [k, $(k).value.trim()]));
+const say = (t, kind) => { $("msg").textContent = t; $("msg").className = "msg " + (kind || ""); };
+if (!S) say("Questa pagina funziona solo dentro l'app Agenzia.", "bad");
+else S.get().then(s => { for (const k of fields) $(k).value = s[k] || ""; });
+$("f").addEventListener("submit", async e => {
+  e.preventDefault(); if (!S) return;
+  await S.save(read()); say("Salvato. Provo il collegamento…");
+  const r = await S.test(read()); say(r.ok ? "Salvato. " + r.msg : "Salvato, ma: " + r.msg, r.ok ? "ok" : "bad");
+});
+$("test").addEventListener("click", async () => {
+  if (!S) return; say("Provo…"); const r = await S.test(read()); say(r.msg, r.ok ? "ok" : "bad");
+});
+</script>
+</body>
+</html>
