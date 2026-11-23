@@ -6,7 +6,7 @@ import { createTagger } from './ai.js';
 import { createWorker } from './worker.js';
 import { createServer } from './server.js';
 
-const db = openDb(config.dataDir);
+const db = openDb(config.dataDir, { seed: true });
 const store = createStore(db);
 const crawler = createCrawler(config);
 const tagger = createTagger(config);

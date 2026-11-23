@@ -73,6 +73,11 @@ CREATE TABLE IF NOT EXISTS jobs (
 );
 CREATE INDEX IF NOT EXISTS jobs_queue ON jobs(status, run_after);
 
+CREATE TABLE IF NOT EXISTS meta (
+  key   TEXT PRIMARY KEY,
+  value TEXT NOT NULL
+);
+
 CREATE VIRTUAL TABLE IF NOT EXISTS bookmarks_fts USING fts5(
   title, description, note, content, summary, url,
   content='bookmarks', content_rowid='id', tokenize='unicode61 remove_diacritics 2'
@@ -86,7 +91,8 @@ CREATE TRIGGER IF NOT EXISTS bookmarks_ad AFTER DELETE ON bookmarks BEGIN
   INSERT INTO bookmarks_fts(bookmarks_fts, rowid, title, description, note, content, summary, url)
   VALUES ('delete', old.id, old.title, old.description, old.note, old.content, old.summary, old.url);
 END;
-CREATE TRIGGER IF NOT EXISTS bookmarks_au AFTER UPDATE ON bookmarks BEGIN
+DROP TRIGGER IF EXISTS bookmarks_au;
+CREATE TRIGGER bookmarks_au AFTER UPDATE OF title, description, note, content, summary, url ON bookmarks BEGIN
   INSERT INTO bookmarks_fts(bookmarks_fts, rowid, title, description, note, content, summary, url)
   VALUES ('delete', old.id, old.title, old.description, old.note, old.content, old.summary, old.url);
   INSERT INTO bookmarks_fts(rowid, title, description, note, content, summary, url)
@@ -94,7 +100,24 @@ CREATE TRIGGER IF NOT EXISTS bookmarks_au AFTER UPDATE ON bookmarks BEGIN
 END;
 `;
 
-export function openDb(dataDir) {
+// Columns added after the first release; applied to old and new databases alike.
+const COLUMNS = [
+  ['bookmarks', 'read_at', 'TEXT'],
+  ['bookmarks', 'last_opened_at', 'TEXT'],
+  ['bookmarks', 'open_count', 'INTEGER NOT NULL DEFAULT 0'],
+  ['bookmarks', 'snoozed_until', 'TEXT'],
+  ['bookmarks', 'reading_minutes', 'INTEGER'],
+  ['lists', 'rules', "TEXT NOT NULL DEFAULT ''"],
+  ['lists', 'position', 'INTEGER NOT NULL DEFAULT 0'],
+];
+
+// Example sections for a brand-new install. Rename or delete them freely.
+const STARTER_SECTIONS = [
+  { name: 'Video', icon: '🎬', rules: 'youtube.com, youtu.be, vimeo.com, twitch.tv' },
+  { name: 'Codice', icon: '💻', rules: 'github.com, gitlab.com, stackoverflow.com, #programming' },
+];
+
+export function openDb(dataDir, { seed = false } = {}) {
   let file = ':memory:';
   if (dataDir) {
     fs.mkdirSync(path.join(dataDir, 'assets'), { recursive: true });
@@ -102,6 +125,20 @@ export function openDb(dataDir) {
   }
   const db = new DatabaseSync(file);
   db.exec(SCHEMA);
+  for (const [table, col, def] of COLUMNS) {
+    const cols = db.prepare(`PRAGMA table_info(${table})`).all().map((r) => r.name);
+    if (!cols.includes(col)) db.exec(`ALTER TABLE ${table} ADD COLUMN ${col} ${def}`);
+  }
+  db.exec(`CREATE INDEX IF NOT EXISTS bookmarks_inbox ON bookmarks(archived, read_at, created_at)`);
+  const version = db.prepare('PRAGMA user_version').get().user_version;
+  if (version === 0) {
+    const empty = db.prepare(`SELECT (SELECT COUNT(*) FROM lists) + (SELECT COUNT(*) FROM bookmarks) AS n`).get().n === 0;
+    if (seed && empty) {
+      const ins = db.prepare(`INSERT INTO lists (name, icon, rules, position) VALUES (?, ?, ?, ?)`);
+      STARTER_SECTIONS.forEach((s, i) => ins.run(s.name, s.icon, s.rules, i));
+    }
+    db.exec('PRAGMA user_version = 1');
+  }
   // Jobs left "running" by a crash go back to the queue.
   db.prepare(`UPDATE jobs SET status='queued' WHERE status='running'`).run();
   return db;

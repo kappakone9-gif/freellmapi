@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="en">
+<html lang="it">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -12,18 +12,22 @@
   <aside class="sidebar" id="sidebar">
     <div class="brand">🔖 KeepCrawl</div>
     <nav>
-      <a href="#/" data-nav="home">🏠 Home</a>
-      <a href="#/favourites" data-nav="favourites">⭐ Favourites</a>
-      <a href="#/archive" data-nav="archive">🗄️ Archive</a>
-      <a href="#/notes" data-nav="notes">📝 Notes</a>
-      <a href="#/tags" data-nav="tags">🏷️ Tags</a>
+      <a href="#/" data-nav="inbox">📥 Da leggere <span class="count" id="count-inbox"></span></a>
+      <a href="#/triage" data-nav="triage">🔀 Smaltisci</a>
+      <a href="#/all" data-nav="all">📚 Tutti</a>
+      <a href="#/read" data-nav="read">✅ Letti</a>
+      <a href="#/favourites" data-nav="favourites">⭐ Preferiti</a>
+      <a href="#/archive" data-nav="archive">🗄️ Archivio</a>
+      <a href="#/notes" data-nav="notes">📝 Note</a>
+      <a href="#/tags" data-nav="tags">🏷️ Tag</a>
     </nav>
-    <div class="section-title">Lists <button class="icon-btn" id="new-list" title="New list">＋</button></div>
-    <nav id="lists"></nav>
-    <div class="section-title">Tools</div>
+    <div class="section-title">Sezioni <button class="icon-btn" id="new-section" title="Nuova sezione" aria-label="Nuova sezione">＋</button></div>
+    <nav id="sections"></nav>
+    <div class="section-title">Strumenti</div>
     <nav>
-      <a href="#/import" data-nav="import">⬆️ Import</a>
-      <a href="/api/export" id="export-link">⬇️ Export JSON</a>
+      <a href="#/bookmarklet" data-nav="bookmarklet">🔖 Salva dal browser</a>
+      <a href="#/import" data-nav="import">⬆️ Importa</a>
+      <a href="/api/export" id="export-link">⬇️ Esporta JSON</a>
     </nav>
     <div class="status" id="status"></div>
   </aside>
@@ -31,22 +35,46 @@
   <main class="main">
     <header class="topbar">
       <button class="icon-btn menu" id="menu" aria-label="Menu">☰</button>
-      <input id="search" type="search" placeholder="Search everything (title, content, summary)…" autocomplete="off">
+      <input id="search" type="search" placeholder="Cerca ovunque (titolo, testo, riassunto)…  premi /" autocomplete="off">
     </header>
 
     <form class="composer" id="composer">
-      <textarea id="composer-input" rows="1" placeholder="Paste a link to save it, or write a note…"></textarea>
-      <button type="submit" class="primary">Save</button>
+      <textarea id="composer-input" rows="1" placeholder="Incolla uno o più link (o scrivi una nota)…"></textarea>
+      <select id="composer-section" title="Sezione in cui salvare" aria-label="Sezione"></select>
+      <button type="button" id="paste-btn" title="Incolla dagli appunti e salva">📋</button>
+      <button type="submit" class="primary">Salva</button>
     </form>
+    <p class="hint">Suggerimento: copia un link e premi <kbd>Ctrl</kbd>+<kbd>V</kbd> in qualsiasi punto della pagina: viene salvato subito.</p>
 
-    <h1 id="view-title">All bookmarks</h1>
+    <div id="header"></div>
     <div id="view"></div>
-    <div class="more"><button id="load-more" hidden>Load more</button></div>
+    <div class="more"><button id="load-more" hidden>Carica altri</button></div>
   </main>
 </div>
 
 <div class="drawer-backdrop" id="drawer-backdrop" hidden></div>
 <aside class="drawer" id="drawer" aria-hidden="true"></aside>
+
+<dialog id="section-dialog">
+  <form method="dialog" id="section-form">
+    <h3 id="section-dialog-title">Sezione</h3>
+    <label>Nome<input name="name" required maxlength="60" placeholder="es. Ricette, Lavoro, Da comprare"></label>
+    <label>Icona
+      <input name="icon" maxlength="8" placeholder="📁">
+      <span class="emoji-picks" id="emoji-picks"></span>
+    </label>
+    <label>Smistamento automatico <small>(facoltativo)</small>
+      <textarea name="rules" rows="3" placeholder="youtube.com, #ricette, recensione"></textarea>
+      <small>Separati da virgola. <b>dominio.com</b> = link di quel sito · <b>#tag</b> = link con quel tag (anche quelli messi dall'AI) · <b>parola</b> = parola nel titolo o nel link. I link nuovi e quelli già salvati che corrispondono finiscono qui da soli.</small>
+    </label>
+    <div class="dialog-actions">
+      <button type="button" class="danger" id="section-delete">Elimina sezione</button>
+      <span class="grow"></span>
+      <button type="button" id="section-cancel">Annulla</button>
+      <button type="submit" class="primary">Salva</button>
+    </div>
+  </form>
+</dialog>
 
 <div class="toast" id="toast" hidden></div>
 <script type="module" src="/app.js"></script>

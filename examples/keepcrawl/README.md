@@ -5,7 +5,21 @@ A small, self-hosted **"bookmark everything"** app in the spirit of [Karakeep](h
 - **[Firecrawl](https://firecrawl.dev)** fetches every saved link: it renders JavaScript, extracts the main content as clean markdown, and takes a screenshot.
 - **Any OpenAI-compatible LLM** tags and summarises each bookmark. By default it points at a local **FreeLLMAPI** router (`http://localhost:3001/v1`, model `auto`), so the AI part runs on free tiers.
 
+It is tuned for people who **save links and never open them again**: the home page is an inbox of unread links with an AI TL;DR on every card, forgotten links resurface daily, and a one-at-a-time "Smaltisci" (triage) mode lets you clear the backlog in minutes. The UI is in Italian.
+
 No dependencies: plain Node.js 22 (built-in `node:sqlite` with FTS5 full-text search), no build step.
+
+## Built for link hoarders
+
+- **📥 Da leggere (inbox)** is the home page: only unread, unarchived links. Opening the original or pressing ✓ marks a link as read.
+- **TL;DR on every card**: the AI summary is written so you can decide in seconds without opening the link.
+- **✨ Riscoperti per te oggi**: three forgotten links, oldest first, a new set every day (🔄 for more).
+- **🔀 Smaltisci**: one link at a time, oldest first. Keys: `L` read now, `F` done, `A` archive, `P` remind me in a week, `S` skip, `D` delete, `1`–`9` file into a section.
+- **Digest**: how many links are waiting, how many are older than 30 days, and a one-click "archive the forgotten ones" (they stay searchable).
+- **⚡ ≤ 5 min** filter and "shortest first" sort, based on the estimated reading time.
+- **Paste anywhere**: copy a link, press `Ctrl+V` anywhere on the page, and it is saved. Several links pasted at once are all saved. A link followed by some text saves the text as a note.
+- **Bookmarklet**: one click in the browser bar saves the current page, optionally straight into a section. It carries a secret token, so other websites cannot save links for you.
+- **Sections**: create, rename (✎ or double-click), change icon, reorder and delete them. Put links in a section by dragging a card onto it, with the 📁 button on a card, from the detail panel, or while triaging. Each section can have **automatic rules**: `youtube.com` (a site and its subdomains), `#ricette` (a tag, including tags the AI adds), or a plain word found in the title or URL. Matching links, both new and already saved, are filed automatically. A fresh install starts with two example sections, 🎬 Video and 💻 Codice, which you can rename or delete.
 
 ## Features
 
@@ -16,7 +30,8 @@ No dependencies: plain Node.js 22 (built-in `node:sqlite` with FTS5 full-text se
 | Full page content (reader view) + screenshot archive | ✅ markdown from Firecrawl, screenshot stored locally |
 | AI tagging + summary | ✅ reuses existing tags, AI tags shown in teal, yours in purple |
 | Full-text search | ✅ SQLite FTS5 over title, description, content, summary, notes, URL |
-| Favourites, archive, lists | ✅ |
+| Favourites, archive, read/unread, snooze | ✅ |
+| Sections (renamable, with auto-filing rules) | ✅ |
 | Highlights | ✅ select text in the reader view |
 | Tag management (rename / merge / delete) | ✅ |
 | Import | ✅ browser bookmark HTML (Chrome, Firefox, Safari, Pocket…) or a URL-per-line text file |
@@ -96,16 +111,24 @@ curl 'localhost:3100/api/bookmarks?q=scraping&archived=false'
 
 | Method | Path | |
 | --- | --- | --- |
-| GET | `/api/bookmarks` | list / search (`q`, `tag`, `list`, `favourited`, `archived`, `type`, `limit`, `cursor`) |
+| GET | `/api/bookmarks` | list / search (`q`, `tag`, `list`, `favourited`, `archived`, `type`, `unread`, `inbox`, `maxMinutes`, `sort`=`newest\|oldest\|random\|shortest`, `limit`, `cursor`) |
 | POST | `/api/bookmarks` | create `{url}` or `{type:"note", note}`, optional `title`, `tags`, `listId` |
 | GET / PATCH / DELETE | `/api/bookmarks/:id` | read (with content + highlights) / update `title`, `note`, `summary`, `tags`, `favourited`, `archived` / delete |
 | POST | `/api/bookmarks/:id/recrawl`, `/retag` | re-run Firecrawl or the AI |
 | POST | `/api/bookmarks/:id/highlights` | `{text, note?}` |
 | DELETE | `/api/highlights/:id` | |
 | GET / PATCH / DELETE | `/api/tags`, `/api/tags/:id` | list; rename (merges into an existing name); delete |
-| GET / POST / PATCH / DELETE | `/api/lists`, `/api/lists/:id` | lists |
-| PUT / DELETE | `/api/lists/:id/bookmarks/:bookmarkId` | add / remove from list |
-| POST | `/api/import` | body: bookmark HTML or URL-per-line text |
+| POST | `/api/bookmarks/:id/read` | `{read: true\|false}` |
+| POST | `/api/bookmarks/:id/opened` | record that it was opened |
+| POST | `/api/bookmarks/:id/snooze` | `{days}` (0 clears) |
+| POST | `/api/bookmarks/bulk` | `{ids, action, listId?}`; action: `read`, `unread`, `archive`, `unarchive`, `delete`, `addToList`, `removeFromList` |
+| GET | `/api/digest` | unread / forgotten / weekly counters |
+| GET | `/api/rediscover` | `?n=3&shuffle=0` |
+| POST | `/api/archive-forgotten` | `{days: 30}` archive unread links older than that |
+| GET / POST / PATCH / DELETE | `/api/lists`, `/api/lists/:id` | sections: `name`, `icon`, `rules`, `position` (the response includes `added`, the number of links the rules just filed) |
+| PUT / DELETE | `/api/lists/:id/bookmarks/:bookmarkId` | add to / remove from a section |
+| POST | `/api/import` | body: bookmark HTML or URL-per-line text; `?list=` files them into a section |
+| GET | `/api/bookmarklet`, `/save?token=&url=&title=&list=` | bookmarklet token; one-click save |
 | GET | `/api/export`, `/api/status` | |
 
 ## Tests
@@ -114,7 +137,7 @@ curl 'localhost:3100/api/bookmarks?q=scraping&archived=false'
 npm test
 ```
 
-Firecrawl and the LLM are mocked; the tests cover crawling, tagging, search, the fallback parser, the markdown sanitiser and the HTTP API.
+Firecrawl and the LLM are mocked; the tests cover crawling, tagging, search, the fallback parser, the markdown sanitiser, section rules, the inbox/rediscover/digest logic, the bookmarklet endpoint, upgrading a database from the first version, and the HTTP API.
 
 ## Note for networks behind a proxy
 

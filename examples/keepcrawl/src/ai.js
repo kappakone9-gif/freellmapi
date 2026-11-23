@@ -44,7 +44,7 @@ export function createTagger({ llm }, fetchImpl = globalThis.fetch) {
         existingTags.length
           ? `- Reuse these existing tags when they fit: ${existingTags.slice(0, 200).join(', ')}.`
           : '',
-        '- summary: 2-3 plain sentences describing what the page is about and why it is useful.',
+        '- summary: a TL;DR of 2-3 plain sentences for someone who saved this link and will probably never open it: say what it is and give the single most useful takeaway, so they can decide in seconds whether it is worth reading.',
         `- Write the summary in ${llm.language}.`,
         'Return only the JSON object.',
       ]
