@@ -21,6 +21,14 @@ No dependencies: plain Node.js 22 (built-in `node:sqlite` with FTS5 full-text se
 - **Bookmarklet**: one click in the browser bar saves the current page, optionally straight into a section. It carries a secret token, so other websites cannot save links for you.
 - **Sections**: create, rename (✎ or double-click), change icon, reorder and delete them. Put links in a section by dragging a card onto it, with the 📁 button on a card, from the detail panel, or while triaging. Each section can have **automatic rules**: `youtube.com` (a site and its subdomains), `#ricette` (a tag, including tags the AI adds), or a plain word found in the title or URL. Matching links, both new and already saved, are filed automatically. A fresh install starts with two example sections, 🎬 Video and 💻 Codice, which you can rename or delete.
 
+## Save from other apps (TikTok, Instagram, YouTube…)
+
+- **Android**: open KeepCrawl in Chrome on the phone → ⋮ → *Install app*. KeepCrawl then appears in the system **Share** sheet of every app (TikTok: Share → *More*). Sharing saves the link immediately; the confirmation screen lets you file it into a section with one tap. Captions shared along with the link are kept as a note. This uses the PWA Web Share Target (`manifest.webmanifest` + `/share`).
+- **iPhone/iPad**: Safari does not support share targets, so the app's *📱 Salva da altre app* page explains how to create an Apple **Shortcut** shown in the share sheet. It calls `/save?token=…&url=…`, optionally with `&list=` to save straight into a section.
+- **Computer**: bookmarklet in the bookmarks bar.
+- The phone must reach KeepCrawl over **HTTPS**. The easiest private option is [Tailscale](https://tailscale.com): `tailscale serve --bg 3100` gives you `https://<machine>.<tailnet>.ts.net`, reachable only from your own devices. If you expose it publicly instead (e.g. Cloudflare Tunnel), set `KEEPCRAWL_API_KEY`.
+- Safety: `/share` only saves for a device that holds the `kc_device` cookie (HttpOnly, set when you open the app). It saves automatically only on user-initiated navigations (`Sec-Fetch-Site: none`, as a share-sheet launch is) or same-origin requests. Another website linking to it gets a confirmation page instead.
+
 ## Features
 
 | Feature | KeepCrawl |
@@ -128,7 +136,9 @@ curl 'localhost:3100/api/bookmarks?q=scraping&archived=false'
 | GET / POST / PATCH / DELETE | `/api/lists`, `/api/lists/:id` | sections: `name`, `icon`, `rules`, `position` (the response includes `added`, the number of links the rules just filed) |
 | PUT / DELETE | `/api/lists/:id/bookmarks/:bookmarkId` | add to / remove from a section |
 | POST | `/api/import` | body: bookmark HTML or URL-per-line text; `?list=` files them into a section |
-| GET | `/api/bookmarklet`, `/save?token=&url=&title=&list=` | bookmarklet token; one-click save |
+| GET | `/api/bookmarklet`, `/save?token=&url=&title=&list=` | bookmarklet / Shortcut token; one-click save (the link can be inside shared text) |
+| POST | `/api/device` | sets the device cookie used by the share target |
+| GET / POST | `/share` | Web Share Target (`url`, `text`, `title`); POST `id` + `list` files into a section |
 | GET | `/api/export`, `/api/status` | |
 
 ## Tests

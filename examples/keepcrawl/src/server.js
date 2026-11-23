@@ -4,6 +4,7 @@ import path from 'node:path';
 import { timingSafeEqual } from 'node:crypto';
 import { fileURLToPath } from 'node:url';
 import { BadRequest, NotFound } from './store.js';
+import { createShareHandler, deviceCookieHeader, extractSharedUrl } from './share.js';
 
 const PUBLIC_DIR = path.join(path.dirname(fileURLToPath(import.meta.url)), '..', 'public');
 const MIME = {
@@ -15,6 +16,7 @@ const MIME = {
   '.jpg': 'image/jpeg',
   '.webp': 'image/webp',
   '.json': 'application/json',
+  '.webmanifest': 'application/manifest+json',
 };
 
 function send(res, status, body, headers = {}) {
@@ -129,6 +131,8 @@ export function createServer({ store, worker, config, crawler, tagger }) {
   route('GET', '/api/digest', () => store.digest());
   route('POST', '/api/archive-forgotten', async ({ req }) => store.archiveForgotten((await readJson(req)).days));
   route('GET', '/api/bookmarklet', () => ({ token: store.saveToken() }));
+  // Called by the app on start: links this browser/phone so the share sheet works.
+  route('POST', '/api/device', ({ req }) => reply(204, null, { 'set-cookie': deviceCookieHeader(req, store.saveToken()) }));
 
   // ---- tags
   route('GET', '/api/tags', () => store.tags());
@@ -201,7 +205,9 @@ ${close ? '<script>setTimeout(() => window.close(), 1400)</script>' : ''}</body>
     }
     const listId = Number(url.searchParams.get('list')) || undefined;
     try {
-      const out = store.create({ type: 'link', url: url.searchParams.get('url'), title: url.searchParams.get('title') || undefined, listId });
+      // Apps often share "caption + link" as one string: pull the link out of it.
+      const shared = url.searchParams.get('url') || url.searchParams.get('text') || '';
+      const out = store.create({ type: 'link', url: extractSharedUrl(shared) || shared, title: url.searchParams.get('title') || undefined, listId });
       if (out.duplicate && listId) store.addToList(listId, out.bookmark.id);
       worker.poke();
       return html(200, out.duplicate ? '👌' : '✅', out.duplicate ? 'Era già salvato.' : 'Salvato in KeepCrawl.', true);
@@ -210,6 +216,8 @@ ${close ? '<script>setTimeout(() => window.close(), 1400)</script>' : ''}</body>
       return html(400, '⚠️', esc, false);
     }
   }
+
+  const handleShare = createShareHandler({ store, worker, readBody });
 
   function serveFile(res, file, cache) {
     fs.readFile(file, (err, buf) => {
@@ -229,6 +237,7 @@ ${close ? '<script>setTimeout(() => window.close(), 1400)</script>' : ''}</body>
     try {
       if (p === '/api/health') return send(res, 200, { ok: true });
       if (p === '/save') return handleSave(res, url);
+      if (p === '/share') return await handleShare(req, res, url);
 
       if (p.startsWith('/api/') || p.startsWith('/assets/')) {
         if (p !== '/api/status' && !authorised(req, url)) return send(res, 401, { error: 'unauthorised' });
@@ -249,7 +258,7 @@ ${close ? '<script>setTimeout(() => window.close(), 1400)</script>' : ''}</body>
           if (out && out[REPLY]) {
             const { status, body, headers } = out;
             if (status === 204) {
-              res.writeHead(204);
+              res.writeHead(204, headers);
               return res.end();
             }
             return send(res, status, body, headers);

@@ -398,3 +398,88 @@ test('HTTP: read/snooze/digest/rediscover endpoints and bookmarklet /save', asyn
   res = await fetch(`${base}/api/lists/${s.id}`, { method: 'PATCH', headers: json, body: JSON.stringify({ name: 'Primi piatti' }) });
   assert.equal((await res.json()).name, 'Primi piatti');
 });
+
+// ---------- v3: share sheet (Android PWA share target) and iPhone Shortcuts
+
+test('HTTP: share target saves links shared from apps like TikTok', async (t) => {
+  const ctx = setup();
+  const server = createServer({ ...ctx });
+  await new Promise((r) => server.listen(0, '127.0.0.1', r));
+  t.after(() => server.close());
+  const base = `http://127.0.0.1:${server.address().port}`;
+
+  const manifest = await fetch(`${base}/manifest.webmanifest`);
+  assert.match(manifest.headers.get('content-type'), /manifest\+json/);
+  const m = await manifest.json();
+  assert.equal(m.share_target.action, '/share');
+  assert.deepEqual(m.share_target.params, { title: 'title', text: 'text', url: 'url' });
+  for (const icon of m.icons) assert.equal((await fetch(`${base}${icon.src}`)).status, 200);
+  assert.equal((await fetch(`${base}/sw.js`)).status, 200);
+
+  const shareUrl = (params) => `${base}/share?${new URLSearchParams(params)}`;
+  const tiktok = { title: 'TikTok', text: 'Guarda questo video di @chef! https://vm.tiktok.com/ZMabc123/ #ricetta' };
+
+  // Not linked yet: nothing is saved.
+  let res = await fetch(shareUrl(tiktok), { headers: { 'sec-fetch-site': 'none' } });
+  assert.equal(res.status, 401);
+  assert.match(await res.text(), /Collega prima questo telefono/);
+
+  // The app links the device on start.
+  res = await fetch(`${base}/api/device`, { method: 'POST' });
+  assert.equal(res.status, 204);
+  const setCookie = res.headers.get('set-cookie');
+  assert.match(setCookie, /^kc_device=[0-9a-f]{32}; Path=\/; Max-Age=\d+; HttpOnly; SameSite=Lax$/);
+  const cookie = setCookie.split(';')[0];
+  const httpsCookie = (await fetch(`${base}/api/device`, { method: 'POST', headers: { 'x-forwarded-proto': 'https' } })).headers.get('set-cookie');
+  assert.match(httpsCookie, /; Secure$/);
+
+  // A share-sheet launch (Sec-Fetch-Site: none) saves straight away.
+  const video = ctx.store.lists().length ? null : ctx.store.createList({ name: 'Video', icon: '🎬', rules: 'tiktok.com' });
+  res = await fetch(shareUrl(tiktok), { headers: { cookie, 'sec-fetch-site': 'none' } });
+  assert.equal(res.status, 201);
+  const html = await res.text();
+  assert.match(html, /Salvato in KeepCrawl/);
+  assert.match(html, /Vuoi metterlo in una sezione/);
+  const saved = ctx.store.search({}).items[0];
+  assert.equal(saved.url, 'https://vm.tiktok.com/ZMabc123/');
+  assert.equal(saved.note, 'Guarda questo video di @chef!  #ricetta');
+  assert.deepEqual(saved.lists, [video.id], 'section rules apply to shared links too');
+
+  // Sharing again says it is already there.
+  res = await fetch(shareUrl({ url: 'https://vm.tiktok.com/ZMabc123/' }), { headers: { cookie, 'sec-fetch-site': 'none' } });
+  assert.match(await res.text(), /Era già salvato/);
+
+  // A random website linking to /share only gets a confirmation page.
+  res = await fetch(shareUrl({ url: 'https://evil.test/spam' }), { headers: { cookie, 'sec-fetch-site': 'cross-site' } });
+  assert.match(await res.text(), /Salvare questo link\?/);
+  assert.equal(ctx.store.search({ q: 'evil' }).items.length, 0);
+  // …and cannot POST the confirmation itself.
+  res = await fetch(`${base}/share`, { method: 'POST', headers: { cookie, 'sec-fetch-site': 'cross-site', 'content-type': 'application/x-www-form-urlencoded' }, body: 'url=https://evil.test/spam' });
+  assert.equal(res.status, 403);
+  // The user pressing "Salva" on that page (same-origin POST) does save it.
+  res = await fetch(`${base}/share`, { method: 'POST', headers: { cookie, 'sec-fetch-site': 'same-origin', 'content-type': 'application/x-www-form-urlencoded' }, body: 'url=https://ok.test/article' });
+  assert.equal(res.status, 201);
+
+  // Filing into a section from the success page.
+  const s = ctx.store.createList({ name: 'Cucina', icon: '🍳' });
+  res = await fetch(`${base}/share`, { method: 'POST', headers: { cookie, 'sec-fetch-site': 'same-origin', 'content-type': 'application/x-www-form-urlencoded' }, body: `id=${saved.id}&list=${s.id}` });
+  assert.match(await res.text(), /Messo in 🍳 Cucina/);
+  assert.ok(ctx.store.get(saved.id).lists.includes(s.id));
+
+  // No link in the shared content.
+  res = await fetch(shareUrl({ text: 'solo testo' }), { headers: { cookie, 'sec-fetch-site': 'none' } });
+  assert.equal(res.status, 400);
+
+  // iPhone Shortcut path: /save extracts the link from "caption + link" text.
+  const { token } = await (await fetch(`${base}/api/bookmarklet`)).json();
+  res = await fetch(`${base}/save?token=${token}&url=${encodeURIComponent('Che ridere 😂 https://www.tiktok.com/@user/video/123')}`);
+  assert.match(await res.text(), /Salvato/);
+  assert.equal(ctx.store.search({ q: 'tiktok' }).items.some((b) => b.url === 'https://www.tiktok.com/@user/video/123'), true);
+});
+
+test('extractSharedUrl picks the first link from any field', async () => {
+  const { extractSharedUrl } = await import('../src/share.js');
+  assert.equal(extractSharedUrl(null, 'guarda https://a.test/x, bello!'), 'https://a.test/x');
+  assert.equal(extractSharedUrl('', '', 'https://b.test'), 'https://b.test');
+  assert.equal(extractSharedUrl('nessun link'), null);
+});

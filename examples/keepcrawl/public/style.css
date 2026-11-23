@@ -196,3 +196,12 @@ a.bookmarklet { display: inline-block; padding: 8px 14px; border-radius: 999px; 
   .composer textarea { flex: 1 1 100%; }
   .composer select { flex: 1; max-width: none; }
 }
+
+/* ---------- v3: share from other apps ---------- */
+.box h2 { font-size: 17px; margin: 0 0 8px; }
+.box ol { padding-left: 22px; line-height: 1.7; }
+.box.warn { background: #fef3c7; border-color: #f59e0b; color: #78350f; }
+@media (prefers-color-scheme: dark) { .box.warn { background: #3b2a0a; color: #fde68a; } }
+.copy-row { display: flex; gap: 8px; align-items: center; margin: 6px 0 10px; }
+.copy-row code { flex: 1; min-width: 0; overflow-x: auto; white-space: nowrap; background: var(--bg); padding: 8px 10px; border-radius: 8px; font-size: 12px; }
+.small { margin: 8px 0 0; font-size: 13px; }

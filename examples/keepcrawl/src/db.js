@@ -113,7 +113,7 @@ const COLUMNS = [
 
 // Example sections for a brand-new install. Rename or delete them freely.
 const STARTER_SECTIONS = [
-  { name: 'Video', icon: '🎬', rules: 'youtube.com, youtu.be, vimeo.com, twitch.tv' },
+  { name: 'Video', icon: '🎬', rules: 'youtube.com, youtu.be, vimeo.com, twitch.tv, tiktok.com' },
   { name: 'Codice', icon: '💻', rules: 'github.com, gitlab.com, stackoverflow.com, #programming' },
 ];
 

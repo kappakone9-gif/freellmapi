@@ -366,17 +366,60 @@ function renderImport() {
 }
 
 async function renderBookmarklet() {
-  $('#header').innerHTML = '<div class="view-head"><h1>🔖 Salva dal browser con un clic</h1></div>';
+  $('#header').innerHTML = '<div class="view-head"><h1>📱 Salva da altre app</h1></div>';
   const { token } = await api('/api/bookmarklet');
+  const base = location.origin;
+  const local = /^(localhost|127\.|\[::1\])/.test(location.hostname);
+  const secure = location.protocol === 'https:' || local;
+  const saveUrl = (listId) => `${base}/save?token=${token}${listId ? `&list=${listId}` : ''}&url=`;
   const js = (listId) =>
-    `javascript:(()=>{window.open(${JSON.stringify(`${location.origin}/save?token=${token}${listId ? `&list=${listId}` : ''}&url=`)}+encodeURIComponent(location.href)+'&title='+encodeURIComponent(document.title),'keepcrawl','width=420,height=260')})()`;
-  const link = (label, listId) => `<a class="bookmarklet" href="${esc(js(listId))}" draggable="true" onclick="event.preventDefault();alert('Trascinami nella barra dei preferiti!')">${label}</a>`;
-  $('#view').innerHTML = `<div class="box">
-    <p>Trascina questo pulsante nella <b>barra dei preferiti</b> del browser. Quando sei su una pagina che vuoi tenere, cliccalo: viene salvata senza aprire KeepCrawl.</p>
+    `javascript:(()=>{window.open(${JSON.stringify(saveUrl(listId))}+encodeURIComponent(location.href)+'&title='+encodeURIComponent(document.title),'keepcrawl','width=420,height=320')})()`;
+  const link = (label, listId) => `<a class="bookmarklet" href="${esc(js(listId))}" draggable="true" data-bookmarklet>${label}</a>`;
+  const copyRow = (value) => `<div class="copy-row"><code>${esc(value)}</code><button data-copy="${esc(value)}">📋 Copia</button></div>`;
+
+  $('#view').innerHTML = `
+  ${!secure ? `<div class="box warn">⚠️ Stai usando <b>${esc(base)}</b> senza HTTPS. Per installare l’app sul telefono e usare il tasto “Condividi” serve un indirizzo <b>https://</b> raggiungibile dal telefono (vedi “Come raggiungere KeepCrawl dal telefono” in fondo).</div>` : ''}
+
+  <div class="box">
+    <h2>🤖 Android: KeepCrawl nel tasto “Condividi”</h2>
+    <ol>
+      <li>Sul telefono apri <b>${esc(base)}</b> con <b>Chrome</b>.</li>
+      <li>Menu <b>⋮</b> → <b>Installa app</b> (o “Aggiungi a schermata Home”).</li>
+      <li>In TikTok, Instagram, YouTube, Chrome… tocca <b>Condividi</b> → <b>Altro</b> (o scorri le icone) → <b>KeepCrawl</b>.</li>
+      <li>Il link viene salvato subito, e puoi metterlo in una sezione con un tocco.</li>
+    </ol>
+    <p class="hint">Su TikTok il pulsante è la freccia “Condividi” → scorri la riga in basso fino a “Altro”. La prima volta tieni premuto KeepCrawl per fissarlo tra le prime scelte.</p>
+    ${state.installPrompt ? '<p><button class="primary" data-install>⬇️ Installa KeepCrawl su questo dispositivo</button></p>' : ''}
+  </div>
+
+  <div class="box">
+    <h2>🍏 iPhone / iPad: un Comando Rapido nel foglio di condivisione</h2>
+    <p>Su iPhone le web app non possono comparire in “Condividi”, ma un Comando Rapido sì. Si crea una volta sola (2 minuti):</p>
+    <ol>
+      <li>Apri l’app <b>Comandi</b> → <b>＋</b>. Chiamalo <b>Salva in KeepCrawl</b>.</li>
+      <li>Tocca l’icona <b>ⓘ</b> in basso → attiva <b>Mostra nel foglio di condivisione</b>. Come tipo di input lascia <b>URL</b> e <b>Testo</b>.</li>
+      <li>Aggiungi l’azione <b>Codifica URL</b> (input: <i>Input comando rapido</i>).</li>
+      <li>Aggiungi l’azione <b>Testo</b>, incolla questo indirizzo e subito dopo inserisci la variabile <i>URL codificato</i>:
+        ${copyRow(saveUrl())}</li>
+      <li>Aggiungi <b>Ottieni contenuti dell’URL</b> (input: <i>Testo</i>), poi <b>Mostra notifica</b> con “Salvato ✅”.</li>
+      <li>In TikTok tocca <b>Condividi</b> → <b>Altro</b> (o “Condividi su…”) → <b>Salva in KeepCrawl</b>.</li>
+    </ol>
+    ${state.sections.length ? `<p>Vuoi un comando per salvare direttamente in una sezione? Usa invece uno di questi indirizzi:</p>${state.sections.map((s) => `<p class="small">${esc(s.icon)} ${esc(s.name)}</p>${copyRow(saveUrl(s.id))}`).join('')}` : ''}
+    <p class="hint">I nomi delle azioni possono variare leggermente con la versione di iOS. Per avere l’icona sulla schermata Home: in Safari tocca Condividi → “Aggiungi alla schermata Home”.</p>
+  </div>
+
+  <div class="box">
+    <h2>💻 Computer: pulsante nella barra dei preferiti</h2>
+    <p>Trascina questo pulsante nella barra dei preferiti. Sulla pagina che vuoi tenere, cliccalo e la pagina viene salvata.</p>
     <p>${link('➕ Salva in KeepCrawl')}</p>
-    ${state.sections.length ? `<p>Oppure un pulsante per ogni sezione, per salvare direttamente lì:</p><p class="row">${state.sections.map((s) => link(`${esc(s.icon)} ${esc(s.name)}`, s.id)).join(' ')}</p>` : ''}
-    <p class="hint">Il pulsante contiene un codice segreto: non condividerlo. Se rinomini una sezione il pulsante continua a funzionare.</p>
-  </div>`;
+    ${state.sections.length ? `<p>Oppure un pulsante per ogni sezione:</p><p class="row">${state.sections.map((s) => link(`${esc(s.icon)} ${esc(s.name)}`, s.id)).join(' ')}</p>` : ''}
+  </div>
+
+  <div class="box">
+    <h2>🌐 Come raggiungere KeepCrawl dal telefono</h2>
+    <p>Il telefono deve poter aprire KeepCrawl con un indirizzo <b>https://</b>. Il modo più semplice e privato è <b>Tailscale</b> (gratis): installalo sul computer e sul telefono, poi sul computer esegui <code>tailscale serve --bg 3100</code>. Ottieni un indirizzo tipo <code>https://computer.tuo-tailnet.ts.net</code> che funziona solo sui tuoi dispositivi. In alternativa, un Cloudflare Tunnel; in quel caso KeepCrawl è pubblico, quindi imposta <code>KEEPCRAWL_API_KEY</code>.</p>
+  </div>
+  <p class="hint">🔒 Gli indirizzi qui sopra contengono un codice segreto: non condividerli.</p>`;
 }
 
 // ---------- triage ("smaltisci"): one link at a time
@@ -933,6 +976,25 @@ async function handleCardClick(e, c) {
 }
 
 $('#view').addEventListener('click', async (e) => {
+  const copy = e.target.closest('[data-copy]');
+  if (copy) {
+    try {
+      await navigator.clipboard.writeText(copy.dataset.copy);
+      toast('Copiato');
+    } catch {
+      prompt('Copia questo indirizzo:', copy.dataset.copy);
+    }
+    return;
+  }
+  if (e.target.closest('[data-bookmarklet]')) {
+    e.preventDefault();
+    return toast('Trascinami nella barra dei preferiti!');
+  }
+  if (e.target.closest('[data-install]') && state.installPrompt) {
+    state.installPrompt.prompt();
+    state.installPrompt = null;
+    return;
+  }
   const c = e.target.closest('.card');
   if (c) return handleCardClick(e, c);
 
@@ -1086,7 +1148,15 @@ window.addEventListener('hashchange', () => {
   render().catch((e) => toast(e.message));
 });
 
+window.addEventListener('beforeinstallprompt', (e) => {
+  e.preventDefault();
+  state.installPrompt = e;
+});
+if ('serviceWorker' in navigator) navigator.serviceWorker.register('/sw.js').catch(() => {});
+
 (async function init() {
+  // Link this browser/phone so sharing from other apps works (sets a cookie).
+  api('/api/device', { method: 'POST' }).catch(() => {});
   await refreshSidebar();
   await render();
 })().catch((e) => toast(e.message));
