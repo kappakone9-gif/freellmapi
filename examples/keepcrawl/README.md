@@ -53,10 +53,11 @@ Not included (Karakeep has them): image/PDF uploads, browser extension, mobile a
 
 ```bash
 cd examples/keepcrawl
-export FIRECRAWL_API_KEY=fc-...            # https://firecrawl.dev → API keys
-export LLM_API_KEY=freellmapi-...          # your FreeLLMAPI unified key
-npm start                                  # → http://127.0.0.1:3100
+cp .env.example .env      # Windows: copy .env.example .env — then put your keys in it
+npm start                 # → http://127.0.0.1:3100
 ```
+
+`npm start` reads `.env` if it exists (Node's `--env-file-if-exists`), so the same steps work on macOS, Linux and Windows. Without keys it still runs: pages are fetched without Firecrawl and AI tagging is skipped if no LLM is reachable.
 
 Start FreeLLMAPI first (`npm run dev` at the repo root) so tagging works, or point `LLM_BASE_URL` at any other OpenAI-compatible endpoint (OpenAI, Ollama's `http://localhost:11434/v1`, OpenRouter, …).
 
