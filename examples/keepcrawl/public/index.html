@@ -1,0 +1,54 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>KeepCrawl</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🔖</text></svg>">
+<link rel="stylesheet" href="/style.css">
+</head>
+<body>
+<div class="app">
+  <aside class="sidebar" id="sidebar">
+    <div class="brand">🔖 KeepCrawl</div>
+    <nav>
+      <a href="#/" data-nav="home">🏠 Home</a>
+      <a href="#/favourites" data-nav="favourites">⭐ Favourites</a>
+      <a href="#/archive" data-nav="archive">🗄️ Archive</a>
+      <a href="#/notes" data-nav="notes">📝 Notes</a>
+      <a href="#/tags" data-nav="tags">🏷️ Tags</a>
+    </nav>
+    <div class="section-title">Lists <button class="icon-btn" id="new-list" title="New list">＋</button></div>
+    <nav id="lists"></nav>
+    <div class="section-title">Tools</div>
+    <nav>
+      <a href="#/import" data-nav="import">⬆️ Import</a>
+      <a href="/api/export" id="export-link">⬇️ Export JSON</a>
+    </nav>
+    <div class="status" id="status"></div>
+  </aside>
+
+  <main class="main">
+    <header class="topbar">
+      <button class="icon-btn menu" id="menu" aria-label="Menu">☰</button>
+      <input id="search" type="search" placeholder="Search everything (title, content, summary)…" autocomplete="off">
+    </header>
+
+    <form class="composer" id="composer">
+      <textarea id="composer-input" rows="1" placeholder="Paste a link to save it, or write a note…"></textarea>
+      <button type="submit" class="primary">Save</button>
+    </form>
+
+    <h1 id="view-title">All bookmarks</h1>
+    <div id="view"></div>
+    <div class="more"><button id="load-more" hidden>Load more</button></div>
+  </main>
+</div>
+
+<div class="drawer-backdrop" id="drawer-backdrop" hidden></div>
+<aside class="drawer" id="drawer" aria-hidden="true"></aside>
+
+<div class="toast" id="toast" hidden></div>
+<script type="module" src="/app.js"></script>
+</body>
+</html>
