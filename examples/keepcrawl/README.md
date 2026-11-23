@@ -57,6 +57,8 @@ cp .env.example .env      # Windows: copy .env.example .env — then put your ke
 npm start                 # → http://127.0.0.1:3100
 ```
 
+On **Windows** you can simply double-click `avvia-keepcrawl.bat`: it checks that Node.js 22+ is installed, creates `.env` from the example, starts the server and opens the browser.
+
 `npm start` reads `.env` if it exists (Node's `--env-file-if-exists`), so the same steps work on macOS, Linux and Windows. Without keys it still runs: pages are fetched without Firecrawl and AI tagging is skipped if no LLM is reachable.
 
 Start FreeLLMAPI first (`npm run dev` at the repo root) so tagging works, or point `LLM_BASE_URL` at any other OpenAI-compatible endpoint (OpenAI, Ollama's `http://localhost:11434/v1`, OpenRouter, …).
